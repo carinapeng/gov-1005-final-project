@@ -1,6 +1,6 @@
 ---
 title: "Survey"
-author: "Jamal Nimer"
+author: "Jamal Nimer, Sam Saba, Lucy He, Eliot Min, Angie Shin, Austin Li, Shojeh Liu, Carina Peng, Ilyas Mardin"
 date: "2/28/2020"
 output: html_document
 ---
