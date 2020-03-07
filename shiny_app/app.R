@@ -2,6 +2,8 @@ library(shiny)
 library(plotly)
 library(ggthemes)
 
+# must install plotly package
+
 data <- readRDS("for_shiny.RDS")
 
 ui <- navbarPage(
