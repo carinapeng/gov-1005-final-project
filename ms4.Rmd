@@ -1,0 +1,17 @@
+---
+title: "Milestone 4"
+author: "Jamal Nimer, Carina Peng, Ilyas Mardin, Eliot Min, Shojeh Liu, Lucy He, Sam Saba, Angie Shin, Austin Li"
+date: "3/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Github link (with shinyapp): https://github.com/jamalnimer/gov-1005-final-project
+
+Milestone Assignments: https://docs.google.com/document/d/1S11K65b1K_hoQXfA_uTt1KSGAHqmkzuSfgfI6zUheSk/edit?usp=sharing 
+
+Minutes: https://docs.google.com/document/d/1l01avyKtVbD3JiMqLpJMs85S_PAFsXNv0_caQeDdZE8/edit?usp=sharing 
+
