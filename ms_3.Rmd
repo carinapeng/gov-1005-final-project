@@ -1,5 +1,5 @@
 ---
-title: "Survey"
+title: "Blocking Group Project - MS3"
 author: "Jamal Nimer, Sam Saba, Lucy He, Eliot Min, Angie Shin, Austin Li, Shojeh Liu, Carina Peng, Ilyas Mardin"
 date: "2/28/2020"
 output: html_document
@@ -9,16 +9,23 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+<<<<<<< HEAD:Survey.Rmd
 github repo: https://github.com/jamalnimer/gov-1005-final-project.git
 
 About Section:
+=======
+# Repo HTML:
+https://github.com/Lumos23/gov-1005-final-project
+
+# About Section:
+>>>>>>> 81eab4983d533759a9e8d3e835a17707136e2665:ms_3.Rmd
 This project aims to continue the work of the previous blocking group project with more rigorous data analytics and statistical computation, more intuitive graph design, and additional questions (including sexual orientation). It will hopefully build on the previous analysis attempting to find any discrepancies. 
 
 The project will attempt to replicate a truly random housing lottery to assess if Harvard's housing appears to be random as well. The project will check variables such as legacy, race, religion, athletics, sex, freshman dorm, financial aid, international students, and blocking group size.
 
 All Sensitive questions have a "prefer not to answer" option
 
-Modified Survey:
+# Modified Survey:
 
 Email
 
