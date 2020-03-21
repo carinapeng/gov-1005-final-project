@@ -23,6 +23,7 @@ sheet <- read_sheet(ss= "https://docs.google.com/spreadsheets/d/1NQd723ndO2vC6sw
   clean_names() %>%
   select(-timestamp,-email_address)
 ```
+
 ```{r clean_names, echo = FALSE}
 # clean column_names
 names(sheet)[names(sheet) == "ethnicity_check_all_that_apply"]<-"ethinicity"
