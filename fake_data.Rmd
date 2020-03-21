@@ -9,6 +9,9 @@ Fake Data: Takes existing first year list and randomly assigns variables.
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+library(janitor)
 ```
 
 ```{r}
