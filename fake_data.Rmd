@@ -5,6 +5,28 @@ date: "3/21/2020"
 output: html_document
 ---
 
+Fake Data: Takes existing first year list and randomly assigns variables.
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = FALSE)
 ```
+
+```{r}
+sheets_deauth()
+sheet1 <- read_sheet(ss= "https://docs.google.com/spreadsheets/d/18Nbt_VtV1YARn311z0t2z9vh5DuzAVCGLJrvRsqHuLs/edit#gid=1531565679") %>%
+  clean_names() %>%
+  select(-timestamp,-email_address)
+```
+
+```{r ethnicity}
+
+# already have a true list of all athletes.
+
+id <- tibble(id = 1:100)
+a <- sample_n(id, 25, replace=TRUE)
+
+random <- tibble(id = 1:100) %>%
+  mutate(ethnicity = ifelse(a$id %in% id, 1, 0))
+```
+
+
