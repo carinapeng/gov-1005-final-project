@@ -1,13 +1,14 @@
 ---
-title: "Cleaning Dataframe + find linking group housing"
+title: "Further Cleaning Dataframe + Assign Random Houses"
 author: "Lucy He"
-date: "3/20/2020"
+date: "3/25/2020"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(haven)
 library(ggplot2)
 library(readxl)
 library(reprex)
@@ -20,8 +21,10 @@ library(googlesheets4)
 ```{r}
 sheets_deauth()
 sheet <- read_sheet(ss= "https://docs.google.com/spreadsheets/d/1NQd723ndO2vC6sw7LFBs_I8NZTqJ35EWadwkN8hRZng/edit#gid=1484251186") %>%
-  clean_names() %>%
-  select(-timestamp,-email_address)
+  clean_names() %>% 
+  mutate(group_size = as.numeric(as.factor(sapply(what_is_your_blocking_group_size, toString))))%>%
+  select(-timestamp,-email_address,-what_is_your_blocking_group_size)
+sheet
 ```
 ```{r clean_names, echo = FALSE}
 # clean column_names
@@ -34,7 +37,6 @@ names(sheet)[names(sheet) == "if_you_answered_yes_to_being_a_varsity_athlete_wha
 names(sheet)[names(sheet) == "are_you_a_varsity_athlete"]<- "varsity"
 names(sheet)[names(sheet)=="if_you_answered_yes_to_being_a_legacy_student_what_house_was_your_relative_in"]<- "relative_house"
 names(sheet)[names(sheet) == "are_you_on_any_financial_aid"]<- "financial_aid"
-names(sheet)[names(sheet) == "what_is_your_blocking_group_size"]<-"group_size"
 names(sheet)[names(sheet)=="what_is_your_blocking_group_name_all_lowercase_with_no_spaces"]<- "group_name"
 names(sheet)[names(sheet)=="what_is_your_blocking_group_leaders_name_first_and_last_ex_john_doe"]<- "group_leader"
 names(sheet)[names(sheet)=="what_house_were_you_placed_in"]<- "house"
@@ -42,6 +44,12 @@ names(sheet)[names(sheet)=="if_you_are_linking_please_provide_the_first_and_last
 names(sheet)[names(sheet) == "are_you_blocking_with_any_of_your_suitemates"]<- "suitemates"
 names(sheet)[names(sheet)=="please_list_all_members_in_your_blocking_group_separated_by_commas_first_and_last_ex_john_doe_john_harvard"]<- "group_members"
 
+
+# the total number of respondents 
+respondents <- sheet %>%
+  count() %>%
+  pull()
+respondents
 sheet
 ```
 
@@ -55,10 +63,49 @@ sheet %>%
 
 ```
 
-```{r find dorm/entryway that "bonds" best}
+```{r find dorm/entryway that "bonds" best, echo = FALSE}
 sheet %>%
   filter(!is.na(suitemates)) %>%
   group_by(freshman_dorm) %>%
   arrange(desc())
+```
 
+```{r assignhouses, echo = FALSE}
+# for each group, count only once
+# respondent is the variable name of the total number of respondents. 
+# Here we find number of people in our sample that are supposed to be in each house 
+# First we begin by listing the number of students in each house
+
+total_uppseclassmen <- 3000
+Adams <- 263 / total_uppseclassmen * respondents
+Cabot <- 357 / total_uppseclassmen * respondents
+  
+#will finish it later
+
+grouped <- sheet %>% 
+  mutate(random_house = "") %>%
+  group_by(group_leader) %>%
+  slice(1)
+
+# loop through the dataset and assign random houses
+
+count <- 0
+for (row in 1:nrow(grouped)) {
+    if((count + grouped[row,"group_size"] )< 10) {
+        grouped[row,"random_house"]<- "Adams"
+        count <- count+ grouped[row,"group_size"]
+    }
+      
+    else if(10 <= (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) < 20) {
+        grouped[row,"random_house"]<- "Cabot"
+        count <- count+ grouped[row,"group_size"]
+    }
+    
+    else if (20 <= (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) < 30){ grouped[row,"random_house"]<- "Currier"
+         count <- count+ grouped[row,"group_size"]}
+   
+    else grouped[row,"random_house"]<- "Dunster"
+}
+
+grouped   
 ```
