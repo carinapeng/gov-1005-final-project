@@ -184,6 +184,11 @@ sheet <- mutate(sheet,
                         rep(358:397, 7),
                         rep(398:436, 8)
                         ))
+
+# varsity athlete?
+sheet <- sheet %>% 
+  mutate(varsity = ifelse(!is.na(sport), TRUE, FALSE))
+
 ```
 
 
