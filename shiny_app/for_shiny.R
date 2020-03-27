@@ -14,4 +14,4 @@ cleaned_data <- data %>%
 
 cleaned_data
 
-saveRDS(object = cleaned_data, file = "for_shiny.RDS")
+saveRDS(object = cleaned_data, file = "shiny_app/for_shiny.RDS")
