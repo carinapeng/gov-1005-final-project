@@ -71,7 +71,6 @@ sheet <- sheet %>%
   mutate(group_members = as.character(group_members)) %>%
   mutate(linking_group = as.numeric(linking_group)) %>%
   mutate(house = as.numeric(house))
-  
 
 glimpse(sheet)
 

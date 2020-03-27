@@ -12,6 +12,8 @@ knitr::opts_chunk$set(echo = FALSE)
 
 library(tidyverse)
 library(janitor)
+library(infer)
+library(googlesheets4)
 ```
 
 ```{r}
