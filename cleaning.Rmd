@@ -1,9 +1,9 @@
 ---
-title: "Cleaning Dataframe + find linking group housing"
+
+title: "Further Cleaning Dataframe + Assign Random Houses"
 author: "Lucy He"
-date: "3/20/2020"
-output: html_document
----
+date: "3/25/2020"
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -20,15 +20,16 @@ library(googlesheets4)
 ```{r}
 sheets_deauth()
 sheet <- read_sheet(ss= "https://docs.google.com/spreadsheets/d/1NQd723ndO2vC6sw7LFBs_I8NZTqJ35EWadwkN8hRZng/edit#gid=1484251186") %>%
-  clean_names() %>%
-  select(-timestamp,-email_address)
+  clean_names() %>% 
+  mutate(group_size = as.numeric(as.factor(sapply(what_is_your_blocking_group_size, toString))))%>%
+  select(-timestamp,-email_address,-what_is_your_blocking_group_size)
+sheet
 ```
 
 ```{r clean_names, echo = FALSE}
 # clean column_names
 names(sheet)[names(sheet) == "ethnicity_check_all_that_apply"]<-"ethinicity"
 names(sheet)[names(sheet) == "religion_check_all_that_apply"] <- "religion"
-names(sheet)[names(sheet) == "are_you_an_international_student"] <- "international"
 names(sheet)[names(sheet) == "are_you_an_international_student"] <- "international"
 names(sheet)[names(sheet) == "if_you_answered_yes_to_being_an_international_student_what_country_are_you_from"]<- "country"
 names(sheet)[names(sheet) == "if_you_answered_yes_to_being_a_varsity_athlete_what_sport_do_you_play_on"]<- "sport"
@@ -43,6 +44,11 @@ names(sheet)[names(sheet)=="if_you_are_linking_please_provide_the_first_and_last
 names(sheet)[names(sheet) == "are_you_blocking_with_any_of_your_suitemates"]<- "suitemates"
 names(sheet)[names(sheet)=="please_list_all_members_in_your_blocking_group_separated_by_commas_first_and_last_ex_john_doe_john_harvard"]<- "group_members"
 
+# the total number of respondents 
+respondents <- sheet %>%
+  count() %>%
+  pull()
+respondents
 sheet
 ```
 
@@ -56,10 +62,83 @@ sheet %>%
 
 ```
 
-```{r find dorm/entryway that "bonds" best}
+```{r find dorm/entryway that "bonds" best, echo = FALSE}
 sheet %>%
   filter(!is.na(suitemates)) %>%
   group_by(freshman_dorm) %>%
   arrange(desc())
+```
 
+```{r assignhouses, echo = FALSE}
+
+# respondent is the variable name of the total number of respondents. 
+# Here we find number of people in our sample that are supposed to be in each house 
+# First we begin by listing the cutoff number of students in each house
+
+total_uppseclassmen <- 4527
+Adams <- 263 / total_uppseclassmen * respondents
+Cabot <- (263+357) / total_uppseclassmen * respondents
+Currier <- (263+357+364) / total_uppseclassmen * respondents
+Dunster <- (263+357+364+376) / total_uppseclassmen * respondents
+Eliot <- (263+357+364+376+425) / total_uppseclassmen * respondents
+Kirkland <- (263+357+364+376+425+386) / total_uppseclassmen * respondents
+Leverett <- (263+357+364+376+425+386+322) / total_uppseclassmen * respondents
+Lowell <- (263+357+364+376+425+386+322+407) / total_uppseclassmen * respondents
+Mather <- (263+357+364+376+425+386+322+407+399) / total_uppseclassmen * respondents
+Pfoho <- (263+357+364+376+425+386+322+407+399+365) / total_uppseclassmen * respondents
+Quincy <- (263+357+364+376+425+386+322+407+399+365+465) / total_uppseclassmen * respondents
+Winthrop <- (263+357+364+376+425+386+322+407+399+365+465+398) / total_uppseclassmen * respondents
+
+# for each group, count only once
+
+grouped <- sheet %>% 
+  mutate(random_house = "") %>%
+  group_by(group_leader) %>%
+  slice(1)
+
+# loop through the dataset and assign random houses
+
+count <- 0
+for (row in 1:nrow(grouped)) {
+    if((count + grouped[row,"group_size"] )<= Adams) {
+        grouped[row,"random_house"]<- "Adams"
+        count <- count+ grouped[row,"group_size"]
+    }
+      
+    else if(Adams < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Cabot) {
+        grouped[row,"random_house"]<- "Cabot"
+        count <- count+ grouped[row,"group_size"]
+    }
+    
+    else if (Cabot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Currier){ grouped[row,"random_house"]<- "Currier"
+         count <- count+ grouped[row,"group_size"]}
+
+    else if (Currier < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Dunster){ grouped[row,"random_house"]<- "Dunster"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Dunster < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Eliot){ grouped[row,"random_house"]<- "Eliot"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Eliot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Kirkland){ grouped[row,"random_house"]<- "Kirkland"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Kirkland < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Leverett){ grouped[row,"random_house"]<- "Leverett"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Leverett < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Lowell){ grouped[row,"random_house"]<- "Lowell"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Lowell < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Mather){ grouped[row,"random_house"]<- "Mather"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Mather < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Pfoho){ grouped[row,"random_house"]<- "Pfoho"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Pfoho < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Quincy){ grouped[row,"random_house"]<- "Quincy"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else {grouped[row,"random_house"]<- "Winthrop"}
+}
+
+grouped   
 ```
