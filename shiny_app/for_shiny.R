@@ -1,3 +1,5 @@
+#Loaded up 
+
 library(readxl)
 library(googlesheets4)
 library(janitor)
@@ -14,4 +16,9 @@ cleaned_data <- data %>%
 
 cleaned_data
 
+<<<<<<< HEAD
 saveRDS(object = cleaned_data, file = "shiny_app/for_shiny.RDS")
+=======
+saveRDS(object = cleaned_data, file = "for_shiny.RDS")
+
+>>>>>>> eliotdmin-master

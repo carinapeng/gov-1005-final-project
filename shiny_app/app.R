@@ -5,7 +5,17 @@ library(tidyverse)
 
 # must install plotly package
 
+<<<<<<< HEAD
 data <- readRDS("updated_fake_data.RDS")
+=======
+data <- readRDS("for_shiny.RDS")
+data2 <- data %>%
+  count(freshman_dorm)
+data3 <- data %>%
+  count(what_house_were_you_placed_in)
+
+
+>>>>>>> eliotdmin-master
 
 #BREAKDOWN OF FROSH
 
@@ -43,6 +53,7 @@ athletes_per_block <- data %>%
 
  
 ui <- navbarPage(
+<<<<<<< HEAD
   "Blocking Project",
   tabPanel("Breakdown of the Freshman Class",
            navlistPanel(
@@ -68,9 +79,22 @@ ui <- navbarPage(
                       plotlyOutput("legaciesByBlockingGroup")),
              tabPanel("Varsity Students per Blocking Group",
                       plotlyOutput("blockingVarsity")))),
+=======
+    "Blocking Project",
+    tabPanel("Model",
+             fluidPage(
+                 titlePanel("Fake Pre-Housing Day Data"),
+                 mainPanel(plotlyOutput("plotName"),
+                           plotlyOutput("plotName2"),
+                           plotOutput("plotName3"),
+                           plotOutput("plotName4")
+             ))),
+    
+>>>>>>> eliotdmin-master
     tabPanel("Discussion",
              titlePanel("Conclusions from Fake Data"),
-             p("We inputted model data into the survey we made to get preliminary graphs. More detailed work will follow with actual data collection and analysis.")),
+             p("A huge wrench was thrown into our data collection with the coronavirus evacuation. We are currently working on acquiring data in spite of this disruption.
+               We inputted model data into the survey we made to get preliminary graphs. More detailed work will follow with actual data collection and analysis.")),
     tabPanel("About", 
              titlePanel("About"),
              h3("Project Background and Motivations"),
@@ -111,6 +135,7 @@ server <- function(input, output) {
            y = "Number of Students") + 
     theme_classic()
     
+<<<<<<< HEAD
     ))
   
   
@@ -182,6 +207,15 @@ server <- function(input, output) {
     ))
   
   #GRAPHS FOR BREAKDOWN OF BLOCKING GROUPS
+=======
+    output$plotName3 <- renderPlot(
+      pie(data2$n, labels = data2$freshman_dorm, main = "Distributions of freshman dorms")
+    )
+    
+    output$plotName4 <- renderPlot(
+      pie(data3$n, labels = data3$what_house_were_you_placed_in, main = "Distributions of house placements")
+    )
+>>>>>>> eliotdmin-master
   
 
   output$legaciesByBlockingGroup <- renderPlotly(
