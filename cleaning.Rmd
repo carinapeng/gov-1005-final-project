@@ -71,16 +71,26 @@ sheet %>%
 ```
 
 ```{r assignhouses, echo = FALSE}
-# for each group, count only once
+
 # respondent is the variable name of the total number of respondents. 
 # Here we find number of people in our sample that are supposed to be in each house 
-# First we begin by listing the number of students in each house
+# First we begin by listing the cutoff number of students in each house
 
-total_uppseclassmen <- 3000
+total_uppseclassmen <- 4527
 Adams <- 263 / total_uppseclassmen * respondents
-Cabot <- 357 / total_uppseclassmen * respondents
-  
-#will finish it later
+Cabot <- (263+357) / total_uppseclassmen * respondents
+Currier <- (263+357+364) / total_uppseclassmen * respondents
+Dunster <- (263+357+364+376) / total_uppseclassmen * respondents
+Eliot <- (263+357+364+376+425) / total_uppseclassmen * respondents
+Kirkland <- (263+357+364+376+425+386) / total_uppseclassmen * respondents
+Leverett <- (263+357+364+376+425+386+322) / total_uppseclassmen * respondents
+Lowell <- (263+357+364+376+425+386+322+407) / total_uppseclassmen * respondents
+Mather <- (263+357+364+376+425+386+322+407+399) / total_uppseclassmen * respondents
+Pfoho <- (263+357+364+376+425+386+322+407+399+365) / total_uppseclassmen * respondents
+Quincy <- (263+357+364+376+425+386+322+407+399+365+465) / total_uppseclassmen * respondents
+Winthrop <- (263+357+364+376+425+386+322+407+399+365+465+398) / total_uppseclassmen * respondents
+
+# for each group, count only once
 
 grouped <- sheet %>% 
   mutate(random_house = "") %>%
@@ -91,20 +101,44 @@ grouped <- sheet %>%
 
 count <- 0
 for (row in 1:nrow(grouped)) {
-    if((count + grouped[row,"group_size"] )< 10) {
+    if((count + grouped[row,"group_size"] )<= Adams) {
         grouped[row,"random_house"]<- "Adams"
         count <- count+ grouped[row,"group_size"]
     }
       
-    else if(10 <= (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) < 20) {
+    else if(Adams < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Cabot) {
         grouped[row,"random_house"]<- "Cabot"
         count <- count+ grouped[row,"group_size"]
     }
     
-    else if (20 <= (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) < 30){ grouped[row,"random_house"]<- "Currier"
+    else if (Cabot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Currier){ grouped[row,"random_house"]<- "Currier"
          count <- count+ grouped[row,"group_size"]}
-   
-    else grouped[row,"random_house"]<- "Dunster"
+
+    else if (Currier < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Dunster){ grouped[row,"random_house"]<- "Dunster"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Dunster < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Eliot){ grouped[row,"random_house"]<- "Eliot"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Eliot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Kirkland){ grouped[row,"random_house"]<- "Kirkland"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Kirkland < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Leverett){ grouped[row,"random_house"]<- "Leverett"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Leverett < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Lowell){ grouped[row,"random_house"]<- "Lowell"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Lowell < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Mather){ grouped[row,"random_house"]<- "Mather"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Mather < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Pfoho){ grouped[row,"random_house"]<- "Pfoho"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (Pfoho < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Quincy){ grouped[row,"random_house"]<- "Quincy"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else {grouped[row,"random_house"]<- "Winthrop"}
 }
 
 grouped   
