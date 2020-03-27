@@ -39,9 +39,9 @@ names(sheet)[names(sheet) == "are_you_on_any_financial_aid"]<- "financial_aid"
 names(sheet)[names(sheet) == "what_is_your_blocking_group_size"]<-"group_size"
 names(sheet)[names(sheet)=="what_is_your_blocking_group_name_all_lowercase_with_no_spaces"]<- "group_name"
 names(sheet)[names(sheet)=="what_is_your_blocking_group_leaders_name_first_and_last_ex_john_doe"]<- "group_leader"
+names(sheet)[names(sheet)=="are_you_blocking_with_any_of_your_suitemates"]<- "suitemates"
 names(sheet)[names(sheet)=="what_house_were_you_placed_in"]<- "house"
 names(sheet)[names(sheet)=="if_you_are_linking_please_provide_the_first_and_last_name_of_one_person_from_your_linking_group"] <- "linking_group"
-names(sheet)[names(sheet) == "are_you_blocking_with_any_of_your_suitemates"]<- "suitemates"
 names(sheet)[names(sheet)=="please_list_all_members_in_your_blocking_group_separated_by_commas_first_and_last_ex_john_doe_john_harvard"]<- "group_members"
 
 sheet
@@ -217,7 +217,11 @@ sheet <- sheet %>%
 
 ```
 
+```{r saveRDS}
 
+saveRDS(object = sheet, file = "shiny_app/updated_fake_data.RDS")
+
+```
 
 
 
