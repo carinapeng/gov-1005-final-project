@@ -7,6 +7,8 @@ library(tidyverse)
 
 data <- readRDS("updated_fake_data.RDS")
 
+#BREAKDOWN OF FROSH
+
 #Tibble that assigns a "yard" variable indicating the yard of the freshman house
 yards <- data %>%
   mutate(yard = case_when(
@@ -24,13 +26,20 @@ how_many_each_size <- data %>%
   count(group_size) %>%
   mutate(numberOfGroups = n/group_size)
 
+suitemates_per_house <- data %>%
+  group_by(freshman_dorm) %>%
+  summarize(meanSuitemates = mean(suitemates))
+
+#BREAKDOWN OF BLOCKING GROUPS
+
 legacies_per_block <- data %>%
   group_by(group_name) %>%
   summarize(legacies = sum(legacy))
 
-suitemates_per_house <- data %>%
-  group_by(freshman_dorm) %>%
-  summarize(meanSuitemates = mean(suitemates))
+athletes_per_block <- data %>%
+  group_by(group_name) %>%
+  count(varsity) %>%
+  filter(varsity == TRUE)
 
  
 ui <- navbarPage(
@@ -49,14 +58,16 @@ ui <- navbarPage(
                       plotlyOutput("sexualOrientation")),
              tabPanel("Ethnicity Distribution",
                       plotlyOutput("ethnicities")),
-             tabPanel("Suitemates per House",
+             tabPanel("Average Suitemates per House",
                       plotlyOutput("suitematesPerHouse")))),
   tabPanel("Breakdown of Blocking Groups",
            navlistPanel(
              tabPanel("Distribution of Blocking Group Sizes",
                       plotlyOutput("blockSizes")),
              tabPanel("Legacy students per Blocking Group",
-                      plotlyOutput("legaciesByBlockingGroup")))),
+                      plotlyOutput("legaciesByBlockingGroup")),
+             tabPanel("Varsity Students per Blocking Group",
+                      plotlyOutput("blockingVarsity")))),
     tabPanel("Discussion",
              titlePanel("Conclusions from Fake Data"),
              p("We inputted model data into the survey we made to get preliminary graphs. More detailed work will follow with actual data collection and analysis.")),
@@ -79,6 +90,8 @@ All Sensitive questions have a “prefer not to answer” option."),
 
 server <- function(input, output) {
   
+  #Graphs for breakdown of freshman class
+  
   output$froshByDorm <- renderPlotly(
     ggplotly(
       ggplot(yards, aes(x = freshman_dorm))  +
@@ -100,26 +113,15 @@ server <- function(input, output) {
     
     ))
   
-  output$suitematesPerHouse <- renderPlotly(
-    ggplotly(
-      ggplot(suitemates_per_house, aes(x = freshman_dorm, y =  meanSuitemates))  +
-        geom_col() +
-        labs(x = "Average number of Suitemates",
-             y = "Number of Students") + 
-        coord_flip() + 
-        theme_classic()
-      
-    ))
   
-  output$blockSizes <- renderPlotly(
+  output$legaciesByYard <- renderPlotly(
     ggplotly(
-      ggplot(how_many_each_size, aes(x = as.factor(group_size), y =  numberOfGroups)) +
+      ggplot(legacy_yards, aes(x = yard, y = legacies)) +
         geom_col() + 
-        labs(x = "Blocking Group Size",
-             y = "Number of Groups") + 
+        labs(x = "Legacy Students per Yard",
+             y = "Number of Students") + 
         theme_classic()
-    )
-  )
+    ))
   
   output$religiousComposition <-renderPlotly(
     ggplotly(
@@ -167,6 +169,20 @@ server <- function(input, output) {
     )
   )
   
+  
+  output$suitematesPerHouse <- renderPlotly(
+    ggplotly(
+      ggplot(suitemates_per_house, aes(x = freshman_dorm, y =  meanSuitemates))  +
+        geom_col() +
+        labs(x = "Average number of Suitemates",
+             y = "Number of Students") + 
+        coord_flip() + 
+        theme_classic()
+      
+    ))
+  
+  #GRAPHS FOR BREAKDOWN OF BLOCKING GROUPS
+  
 
   output$legaciesByBlockingGroup <- renderPlotly(
     ggplotly(
@@ -177,15 +193,27 @@ server <- function(input, output) {
         theme_classic()
       ))
   
-  output$legaciesByYard <- renderPlotly(
-    ggplotly(
-      ggplot(legacy_yards, aes(x = yard, y = legacies)) +
-        geom_col() + 
-        labs(x = "Legacy Students per Yard",
-             y = "Number of Students") + 
-        theme_classic()
-    ))
   
+  output$blockSizes <- renderPlotly(
+    ggplotly(
+      ggplot(how_many_each_size, aes(x = as.factor(group_size), y =  numberOfGroups)) +
+        geom_col() + 
+        labs(x = "Blocking Group Size",
+             y = "Number of Groups") + 
+        theme_classic()
+    )
+  )
+  
+  
+  output$blockingVarsity <- renderPlotly(
+    ggplotly(
+      ggplot(athletes_per_block, aes(x = n)) + 
+        geom_bar() +
+        labs(x = "Number of Varsity Athletes in Blocking Group",
+             y = "Number of Blocking Groups") +
+        theme_classic()
+    )
+  )
 }
 
 shinyApp(ui, server)
