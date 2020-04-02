@@ -1,7 +1,7 @@
 ---
 title: "practice_data"
-author: "Jamal Nimer"
-date: "3/25/2020"
+author: "Lucy He"
+date: "3/26/2020"
 output: html_document
 ---
 
@@ -51,7 +51,6 @@ names(sheet)[names(sheet)=="are_you_blocking_with_any_of_your_suitemates"]<- "su
 names(sheet)[names(sheet)=="what_house_were_you_placed_in"]<- "house"
 names(sheet)[names(sheet)=="if_you_are_linking_please_provide_the_first_and_last_name_of_one_person_from_your_linking_group"] <- "linking_group"
 names(sheet)[names(sheet)=="please_list_all_members_in_your_blocking_group_separated_by_commas_first_and_last_ex_john_doe_john_harvard"]<- "group_members"
-
 sheet
 ```
 
@@ -89,9 +88,7 @@ sheet <- sheet %>%
   mutate(group_members = as.character(group_members)) %>%
   mutate(linking_group = as.numeric(linking_group)) %>%
   mutate(house = as.numeric(house))
-
 glimpse(sheet)
-
 ```
 
 
@@ -108,7 +105,6 @@ glimpse(sheet)
 # random (not correlated).
 
 mutate(sheet, id = 1:1639)
-
 randomize_id <- function(){
   num_list = sample.int(n = 1639, size = 1639)
   sheet %>% 
@@ -134,7 +130,6 @@ randomize_id <- function(){
 # assign sex 
 # 0 = m: 50% (819)
 # 1 = f: 50% (820)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, sex = rep(c(0, 1), c(819, 820)))
 
@@ -147,9 +142,8 @@ sheet <- mutate(sheet, sex = rep(c(0, 1), c(819, 820)))
 # 6 = Indigenous/Native American: 1% (16)
 # 7 = Prefer not to say: 7% (115)
 # 8 = Other: 7% (114)
-
 sheet <- randomize_id()
-sheet <- mutate(sheet, ethnicity = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(721, 280, 180, 180, 33, 16, 115, 114)))  
+sheet <- mutate(sheet, ethnicity = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(721, 280, 180, 180, 33, 16, 115, 114))) 
 
 # assign religion
 # 1 = Agnostic: 21% (344)
@@ -160,7 +154,6 @@ sheet <- mutate(sheet, ethnicity = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(721, 280, 18
 # 6 = Muslim: 3% (49)
 # 7 = Prefer not to say: 6% (101)
 # 8 = Other: 6% (100)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, religion = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(344, 557, 279, 160, 49, 49, 101, 100)))
   
@@ -171,35 +164,30 @@ sheet <- mutate(sheet, religion = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(344, 557, 279
 # 4 = Asexual: 1% (16)
 # 5 = Prefer not to say: 2% (32)
 # 6 = Other: 1% (17)
-  
 sheet <- randomize_id()
 sheet <- mutate(sheet, sexual_orientation = rep(c(1, 2, 3, 4, 5, 6), c(1344, 115, 115, 16, 32, 17)))
   
 # assign international
 # 0 = Domestic: 88% (1345)
 # 1 = International: 18% (294)
-  
 sheet <- randomize_id()
 sheet <- mutate(sheet, international = rep(c(0,1), c(1345, 294))) 
 
 # assign legacy
 # 0 = no: 14% (1410)
 # 1 = yes: 86% (229)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, legacy = rep(c(0,1), c(1410, 229))) 
 
 # assign financial aid
 # 0 = no: 45% (738)
 # 1 = yes: 55% (901)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, financial_aid = rep(c(0,1), c(738, 901))) 
 
 # assign suitemates
 # 0 = no: 85% (1393)
 # 1 = yes: 15% (246)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, suitemates = rep(c(0,1), c(1393, 246))) 
 
@@ -212,6 +200,7 @@ sheet <- mutate(sheet, suitemates = rep(c(0,1), c(1393, 246)))
 # 6: 20% (330)
 # 7: 17% (280)
 # 8: 19% (312)
+
 
 # first I assign group sizes to everyone
 # in the dataset. Next, a group_name is 
@@ -234,103 +223,189 @@ sheet <- mutate(sheet,
                         rep(358:397, 7),
                         rep(398:436, 8)
                         ))
-
 # varsity athlete?
 sheet <- sheet %>% 
   mutate(varsity = ifelse(!is.na(sport), TRUE, FALSE))
-
 ```
 
 
-```{r create_houses}
-
+```{r calculate_house_size}
 # create houses
-
 # respondent is the variable name of the total number of respondents. 
 # Here we find number of people in our sample that are supposed to be in each house 
 # First we begin by listing the cutoff number of students in each house
-
 respondents <- sheet %>%
   count() %>%
   pull()
-
 total_uppseclassmen <- 4527
-Adams <- 263 / total_uppseclassmen * respondents
-Cabot <- (263+357) / total_uppseclassmen * respondents
-Currier <- (263+357+364) / total_uppseclassmen * respondents
-Dunster <- (263+357+364+376) / total_uppseclassmen * respondents
-Eliot <- (263+357+364+376+425) / total_uppseclassmen * respondents
-Kirkland <- (263+357+364+376+425+386) / total_uppseclassmen * respondents
-Leverett <- (263+357+364+376+425+386+322) / total_uppseclassmen * respondents
-Lowell <- (263+357+364+376+425+386+322+407) / total_uppseclassmen * respondents
-Mather <- (263+357+364+376+425+386+322+407+399) / total_uppseclassmen * respondents
-Pfoho <- (263+357+364+376+425+386+322+407+399+365) / total_uppseclassmen * respondents
-Quincy <- (263+357+364+376+425+386+322+407+399+365+465) / total_uppseclassmen * respondents
-Winthrop <- (263+357+364+376+425+386+322+407+399+365+465+398) / total_uppseclassmen * respondents
-
-
+num_adams <- round(263 / total_uppseclassmen * respondents, 0)
+num_cabot <- round((263+357) / total_uppseclassmen * respondents, 0)
+num_currier <- round((263+357+364) / total_uppseclassmen * respondents, 0)
+num_dunster <- round((263+357+364+376) / total_uppseclassmen * respondents,0)
+num_eliot <- round((263+357+364+376+425) / total_uppseclassmen * respondents, 0)
+num_kirkland <- round((263+357+364+376+425+386) / total_uppseclassmen * respondents, 0)
+num_leverett <- round((263+357+364+376+425+386+322) / total_uppseclassmen * respondents, 0)
+num_lowell <- round((263+357+364+376+425+386+322+407) / total_uppseclassmen * respondents, 0)
+num_mather <- round((263+357+364+376+425+386+322+407+399) / total_uppseclassmen * respondents, 0)
+num_pfoho <- round((263+357+364+376+425+386+322+407+399+365) / total_uppseclassmen * respondents, 0)
+num_quincy <- round((263+357+364+376+425+386+322+407+399+365+465) / total_uppseclassmen * respondents, 0)
+num_winthrop <- round((263+357+364+376+425+386+322+407+399+365+465+398) / total_uppseclassmen * respondents, 0)
 ```
 
 
-```{r}
-
+```{r assign_houses}
 # assign houses
-
 grouped <- sheet %>% 
   mutate(random_house = "") %>%
   group_by(group_name) %>%
   slice(1) 
 
+# shuffle blocking groups so there
+# is no bias in group assignment (e.g. 
+# not all floaters are assigned to 
+# adams).
+rows <- sample(nrow(grouped))
+grouped <- grouped[rows, ]
+
 count <- 0
 for (row in 1:nrow(grouped)) {
-    if((count + grouped[row,"group_size"] )<= Adams) {
+    if((count + grouped[row,"group_size"] )<= num_adams) {
         grouped[row,"random_house"]<- "Adams"
         count <- count+ grouped[row,"group_size"]
     }
       
-    else if(Adams < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Cabot) {
+    else if(num_adams < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_cabot) {
         grouped[row,"random_house"]<- "Cabot"
         count <- count+ grouped[row,"group_size"]
     }
     
-    else if (Cabot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Currier){ grouped[row,"random_house"]<- "Currier"
+    else if (num_cabot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_currier){ grouped[row,"random_house"]<- "Currier"
          count <- count+ grouped[row,"group_size"]}
 
-    else if (Currier < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Dunster){ grouped[row,"random_house"]<- "Dunster"
+    else if (num_currier < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_dunster){ grouped[row,"random_house"]<- "Dunster"
          count <- count+ grouped[row,"group_size"]}
   
-    else if (Dunster < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Eliot){ grouped[row,"random_house"]<- "Eliot"
+    else if (num_dunster < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_eliot){ grouped[row,"random_house"]<- "Eliot"
          count <- count+ grouped[row,"group_size"]}
   
-    else if (Eliot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Kirkland){ grouped[row,"random_house"]<- "Kirkland"
+    else if (num_eliot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_kirkland){ grouped[row,"random_house"]<- "Kirkland"
          count <- count+ grouped[row,"group_size"]}
   
-    else if (Kirkland < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Leverett){ grouped[row,"random_house"]<- "Leverett"
+    else if (num_kirkland < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_leverett){ grouped[row,"random_house"]<- "Leverett"
          count <- count+ grouped[row,"group_size"]}
   
-    else if (Leverett < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Lowell){ grouped[row,"random_house"]<- "Lowell"
+    else if (num_leverett < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_lowell){ grouped[row,"random_house"]<- "Lowell"
          count <- count+ grouped[row,"group_size"]}
   
-    else if (Lowell < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Mather){ grouped[row,"random_house"]<- "Mather"
+    else if (num_lowell < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_mather){ grouped[row,"random_house"]<- "Mather"
          count <- count+ grouped[row,"group_size"]}
   
-    else if (Mather < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Pfoho){ grouped[row,"random_house"]<- "Pfoho"
+    else if (num_mather < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_pfoho){ grouped[row,"random_house"]<- "Pfoho"
          count <- count+ grouped[row,"group_size"]}
   
-    else if (Pfoho < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= Quincy){ grouped[row,"random_house"]<- "Quincy"
+    else if (num_pfoho < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_quincy){ grouped[row,"random_house"]<- "Quincy"
          count <- count+ grouped[row,"group_size"]}
   
     else {grouped[row,"random_house"]<- "Winthrop"}
 }
 
-grouped %>% 
-  View()
 
+# use join to assign house to other members in the group as well
 
-# As of right now, only the first person in each group
-# has a house assigned. Assignment code still needs 
-# to be improved.
+assigned_all <- left_join(sheet ,grouped, by = "group_name") %>%
+  select(18, 24:46) %>% 
+  rename_at(.vars = vars(ends_with(".y")),
+            .funs = funs(sub("[.]y$", "", .))) %>% 
+  mutate(house = random_house) %>% 
+  select(-random_house)
 
+```
+
+```{r}
+# test the previous chunk
+
+# assigned_all %>% 
+#   select(last_name, id, group_name, group_size, house) %>% 
+#   arrange(group_name) %>% 
+#   View()
+
+```
+
+```{r create_houses_and_yards}
+
+# filters the assigned data to 
+# populate houses and yards
+
+adams <- assigned_all %>% 
+  filter(house == "Adams")
+
+cabot <- assigned_all %>% 
+  filter(house == "Cabot")
+
+currier <- assigned_all %>% 
+  filter(house == "Currier")
+
+dunster <- assigned_all %>% 
+  filter(house == "Dunster")
+
+eliot <- assigned_all %>% 
+  filter(house == "Eliot")
+
+kirkland <- assigned_all %>% 
+  filter(house == "Kirkland")
+
+leverett <- assigned_all %>% 
+  filter(house == "Leverett")
+
+lowell <- assigned_all %>% 
+  filter(house == "Lowell")
+
+mather <- assigned_all %>% 
+  filter(house == "Mather")
+
+pfoho <- assigned_all %>% 
+  filter(house == "Pfoho")
+
+quincy <- assigned_all %>% 
+  filter(house == "Quincy")
+
+winthrop <- assigned_all %>% 
+  filter(house == "Winthrop")
+
+square <- assigned_all %>% 
+  filter(house == "Lowell" | house == "Quincy" | house == "Adams")
+
+river_east <- assigned_all %>% 
+  filter(house == "Leverett" | house == "Dunster" | house == "Mather")
+
+river_west <- assigned_all %>% 
+  filter(house == "Eliot" | house == "Winthrop" | house == "Kirkland")
+
+quad <- assigned_all %>% 
+  filter(house == "Currier" | house == "Pfoho" | house == "Cabot")
+
+```
+
+```{r}
+overview <- function(community){
+  
+  tibble(
+    prop_sex = mean(community$sex),
+    prop_international = mean(community$international),
+    prop_varsity = mean(community$varsity),
+    prop_legacy = mean(community$legacy),
+    prop_financial_aid = mean(community$financial_aid),
+    prop_group_size = mean(community$group_size)
+  )
+  # prop_ethnicity
+  # prop_religion
+  # prop_sexual_orientation
+}
+
+overview(square)
+overview(river_east)
+overview(river_west)
+overview(quad)
 
 ```
 
@@ -363,13 +438,10 @@ grouped %>%
 # ) %>% 
 #   select(first_name, last_name, sport) %>% 
 #   write_excel_csv2(path = 'athletics.xlsx')
-
 ```
 
 ```{r saveRDS}
-
 saveRDS(object = sheet, file = "shiny_app/updated_fake_data.RDS")
-
 ```
 
 
@@ -378,19 +450,7 @@ Problems/Questions:
 - Given that the fake dataset is
 1639 values long, will all the code be 
 generalizable if we don't get 1639 responses?
-
-
-
-
-
-
-
-
-
-
-
-
-
+- need data to assess if certain identities block together 
 
 
 
