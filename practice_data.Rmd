@@ -316,11 +316,11 @@ for (row in 1:nrow(grouped)) {
 
 # use join to assign house to other members in the group as well
 
-assigned_all <- left_join(sheet, grouped, by = "group_name") %>%
-  select(18, 24:46) %>% 
-  rename_at(.vars = vars(ends_with(".y")),
-            .funs = funs(sub("[.]y$", "", .))) %>% 
-  mutate(house = random_house) %>% 
+assigned_all <- left_join(sheet, grouped, by = "group_name") %>% 
+  select(1:24, 46) %>%
+  rename_at(.vars = vars(ends_with(".x")),
+            .funs = funs(sub("[.]x$", "", .))) %>%
+  mutate(house = random_house) %>%
   select(-random_house)
 
 ```
