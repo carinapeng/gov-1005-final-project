@@ -18,6 +18,10 @@ library(googlesheets4)
 ```
 
 ```{r}
+
+# reads in from the "first_years"
+# google sheet in the project drive
+
 sheets_deauth()
   
 sheet <- read_sheet(ss= "https://docs.google.com/spreadsheets/d/18Nbt_VtV1YARn311z0t2z9vh5DuzAVCGLJrvRsqHuLs/edit#gid=1531565679") %>%
@@ -26,6 +30,10 @@ sheet <- read_sheet(ss= "https://docs.google.com/spreadsheets/d/18Nbt_VtV1YARn31
 ```
 
 ```{r clean_names, echo = FALSE}
+
+# takes the sheet of first_years
+# and reassigns column names
+
 # clean column_names
 names(sheet)[names(sheet) == "ethnicity_check_all_that_apply"]<-"ethnicity"
 names(sheet)[names(sheet) == "religion_check_all_that_apply"] <- "religion"
@@ -48,6 +56,16 @@ sheet
 ```
 
 ```{r assign_class}
+
+# takes the sheet of first_years
+# and assigns the correct class
+# to each variable. Variables like
+# 'religion' and 'ethnicity' are 
+# given numeric values. The numeric
+# values are defined later on (eg 
+# when ethnicity == 1, it means that
+# the ethnicity is White.)
+
 sheet <- sheet %>% 
   mutate(first_name = as.character(first_name)) %>% 
   mutate(last_name = as.character(last_name)) %>% 
@@ -78,6 +96,17 @@ glimpse(sheet)
 
 
 ```{r assign_id}
+
+# each student is given a
+# temporary id. This is used
+# to shuffle students later
+# on in the code. When the
+# ids are reassigned and arranged,
+# then the order of students changes.
+# This ensures that variables
+# in the fake data are 
+# random (not correlated).
+
 mutate(sheet, id = 1:1639)
 
 randomize_id <- function(){
@@ -89,6 +118,19 @@ randomize_id <- function(){
 ```
 
 ```{r assign_attributes}
+
+# assigns most of the variables
+# to the fake data set. First, the percentage
+# of a specific variable's distribution
+# is calculated. Then values for that variable
+# are assigned based on the variable's distribution.
+# Before the next variable is assigned, the 
+# IDs are randomized. This ensures that not all 
+# males (assigned to the first 50% of the
+# data) are also White or Asian (assigned to the 
+# first 61% of the data). Otherwise, all variables 
+# would be correlated.
+
 # assign sex 
 # 0 = m: 50% (819)
 # 1 = f: 50% (820)
@@ -170,6 +212,12 @@ sheet <- mutate(sheet, suitemates = rep(c(0,1), c(1393, 246)))
 # 6: 20% (330)
 # 7: 17% (280)
 # 8: 19% (312)
+
+# first I assign group sizes to everyone
+# in the dataset. Next, a group_name is 
+# assigned to everyone. I assign group
+# name using rep(x, y) where I go through
+# rep range x y times. 
 
 sheet <- randomize_id()
 sheet <- mutate(sheet, 
@@ -291,7 +339,11 @@ grouped %>%
 
 ```{r athletics}
 # 
-# Code used to collect athletics data.
+# Code used to collect athletics data. The
+# result of this r code chunk was copy
+# pasted directly into the first_years
+# spreadsheet because it is true for the
+# real dataset. 
 #
 # athletics_tidy <- athletics %>% 
 #   pivot_longer(
@@ -319,6 +371,14 @@ grouped %>%
 saveRDS(object = sheet, file = "shiny_app/updated_fake_data.RDS")
 
 ```
+
+
+Problems/Questions:
+- Group_id #180 is skipped.
+- Given that the fake dataset is
+1639 values long, will all the code be 
+generalizable if we don't get 1639 responses?
+
 
 
 
