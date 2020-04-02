@@ -1,7 +1,7 @@
 ---
 title: "practice_data"
-author: "Jamal Nimer"
-date: "3/25/2020"
+author: "Lucy He"
+date: "3/26/2020"
 output: html_document
 ---
 
@@ -43,7 +43,6 @@ names(sheet)[names(sheet)=="are_you_blocking_with_any_of_your_suitemates"]<- "su
 names(sheet)[names(sheet)=="what_house_were_you_placed_in"]<- "house"
 names(sheet)[names(sheet)=="if_you_are_linking_please_provide_the_first_and_last_name_of_one_person_from_your_linking_group"] <- "linking_group"
 names(sheet)[names(sheet)=="please_list_all_members_in_your_blocking_group_separated_by_commas_first_and_last_ex_john_doe_john_harvard"]<- "group_members"
-
 sheet
 ```
 
@@ -71,15 +70,12 @@ sheet <- sheet %>%
   mutate(group_members = as.character(group_members)) %>%
   mutate(linking_group = as.numeric(linking_group)) %>%
   mutate(house = as.numeric(house))
-
 glimpse(sheet)
-
 ```
 
 
 ```{r assign_id}
 mutate(sheet, id = 1:1639)
-
 randomize_id <- function(){
   num_list = sample.int(n = 1639, size = 1639)
   sheet %>% 
@@ -92,10 +88,8 @@ randomize_id <- function(){
 # assign sex 
 # 0 = m: 50% (819)
 # 1 = f: 50% (820)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, sex = rep(c(0, 1), c(819, 820)))
-
 # assign ethnicity
 # 1 = White: 44% (721)
 # 2 = Asian: 17% (280)
@@ -105,10 +99,8 @@ sheet <- mutate(sheet, sex = rep(c(0, 1), c(819, 820)))
 # 6 = Indigenous/Native American: 1% (16)
 # 7 = Prefer not to say: 7% (115)
 # 8 = Other: 7% (114)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, ethnicity = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(721, 280, 180, 180, 33, 16, 115, 114)))  
-
 # assign religion
 # 1 = Agnostic: 21% (344)
 # 2 = Christian: 34% (557)
@@ -118,7 +110,6 @@ sheet <- mutate(sheet, ethnicity = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(721, 280, 18
 # 6 = Muslim: 3% (49)
 # 7 = Prefer not to say: 6% (101)
 # 8 = Other: 6% (100)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, religion = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(344, 557, 279, 160, 49, 49, 101, 100)))
   
@@ -139,28 +130,21 @@ sheet <- mutate(sheet, sexual_orientation = rep(c(1, 2, 3, 4, 5, 6), c(1344, 115
   
 sheet <- randomize_id()
 sheet <- mutate(sheet, international = rep(c(0,1), c(1345, 294))) 
-
 # assign legacy
 # 0 = no: 14% (1410)
 # 1 = yes: 86% (229)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, legacy = rep(c(0,1), c(1410, 229))) 
-
 # assign financial aid
 # 0 = no: 45% (738)
 # 1 = yes: 55% (901)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, financial_aid = rep(c(0,1), c(738, 901))) 
-
 # assign suitemates
 # 0 = no: 85% (1393)
 # 1 = yes: 15% (246)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, suitemates = rep(c(0,1), c(1393, 246))) 
-
 # assign group_size and group_name
 # 1: 8% (130)
 # 2: 6% (98)
@@ -170,7 +154,6 @@ sheet <- mutate(sheet, suitemates = rep(c(0,1), c(1393, 246)))
 # 6: 20% (330)
 # 7: 17% (280)
 # 8: 19% (312)
-
 sheet <- randomize_id()
 sheet <- mutate(sheet, 
                 group_size = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(130, 98, 114, 180, 195, 330, 280, 312)),
@@ -186,26 +169,20 @@ sheet <- mutate(sheet,
                         rep(358:397, 7),
                         rep(398:436, 8)
                         ))
-
 # varsity athlete?
 sheet <- sheet %>% 
   mutate(varsity = ifelse(!is.na(sport), TRUE, FALSE))
-
 ```
 
 
 ```{r create_houses}
-
 # create houses
-
 # respondent is the variable name of the total number of respondents. 
 # Here we find number of people in our sample that are supposed to be in each house 
 # First we begin by listing the cutoff number of students in each house
-
 respondents <- sheet %>%
   count() %>%
   pull()
-
 total_uppseclassmen <- 4527
 Adams <- 263 / total_uppseclassmen * respondents
 Cabot <- (263+357) / total_uppseclassmen * respondents
@@ -219,15 +196,11 @@ Mather <- (263+357+364+376+425+386+322+407+399) / total_uppseclassmen * responde
 Pfoho <- (263+357+364+376+425+386+322+407+399+365) / total_uppseclassmen * respondents
 Quincy <- (263+357+364+376+425+386+322+407+399+365+465) / total_uppseclassmen * respondents
 Winthrop <- (263+357+364+376+425+386+322+407+399+365+465+398) / total_uppseclassmen * respondents
-
-
 ```
 
 
 ```{r}
-
 # assign houses
-
 grouped <- sheet %>% 
   mutate(random_house = "") %>%
   group_by(group_name) %>%
@@ -275,14 +248,11 @@ for (row in 1:nrow(grouped)) {
     else {grouped[row,"random_house"]<- "Winthrop"}
 }
 
-grouped %>% 
+
+# use join to assign house to other members in the group as well
+
+assigned_all <- left_join(sheet ,grouped, by = "group_name") %>%
   View()
-
-
-# As of right now, only the first person in each group
-# has a house assigned. Assignment code still needs 
-# to be improved.
-
 
 ```
 
@@ -311,27 +281,11 @@ grouped %>%
 # ) %>% 
 #   select(first_name, last_name, sport) %>% 
 #   write_excel_csv2(path = 'athletics.xlsx')
-
 ```
 
 ```{r saveRDS}
-
 saveRDS(object = sheet, file = "shiny_app/updated_fake_data.RDS")
-
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
