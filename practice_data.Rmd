@@ -206,7 +206,7 @@ sheet <- mutate(sheet, suitemates = rep(c(0,1), c(1393, 246)))
 # in the dataset. Next, a group_name is 
 # assigned to everyone. I assign group
 # name using rep(x, y) where I go through
-# rep range x y times. 
+# rep range x, y times. 
 
 sheet <- randomize_id()
 sheet <- mutate(sheet, 
@@ -255,6 +255,10 @@ num_winthrop <- round((263+357+364+376+425+386+322+407+399+365+465+398) / total_
 
 ```{r assign_houses}
 # assign houses
+
+# creates a new dataframe that groups
+# every blocking group together and then
+# takes only the first person in the block.
 grouped <- sheet %>% 
   mutate(random_house = "") %>%
   group_by(group_name) %>%
@@ -312,7 +316,7 @@ for (row in 1:nrow(grouped)) {
 
 # use join to assign house to other members in the group as well
 
-assigned_all <- left_join(sheet ,grouped, by = "group_name") %>%
+assigned_all <- left_join(sheet, grouped, by = "group_name") %>%
   select(18, 24:46) %>% 
   rename_at(.vars = vars(ends_with(".y")),
             .funs = funs(sub("[.]y$", "", .))) %>% 
@@ -395,17 +399,30 @@ overview <- function(community){
     prop_varsity = mean(community$varsity),
     prop_legacy = mean(community$legacy),
     prop_financial_aid = mean(community$financial_aid),
-    prop_group_size = mean(community$group_size)
+    prop_group_size = mean(community$group_size),
+    prop_white = community %>% 
+      filter(ethnicity == 1) %>% 
+      count() %>% 
+      pull()/nrow(community)
   )
   # prop_ethnicity
   # prop_religion
   # prop_sexual_orientation
+  
+  # consider separating out categorical variables 
+  # and creating separate plots
+  
+  # can do individual ethnicities or put together
+  # a tibble with all of the ethnicities.
+  
 }
 
 overview(square)
 overview(river_east)
 overview(river_west)
 overview(quad)
+overview(pfoho)
+
 
 ```
 
