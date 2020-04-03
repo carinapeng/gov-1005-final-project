@@ -72,14 +72,14 @@ sheet <- sheet %>%
   mutate(entryway = as.character(entryway)) %>% 
   mutate(sex = as.logical(sex)) %>% 
   mutate(ethnicity = as.numeric(ethnicity)) %>% 
-  mutate(religion = as.numeric(religion)) %>% 
-  mutate(sexual_orientation = as.numeric(sexual_orientation)) %>%
+  mutate(religion = as.character(religion)) %>% 
+  mutate(sexual_orientation = as.character(sexual_orientation)) %>%
   mutate(international = as.logical(international)) %>%
   mutate(country = as.character(country)) %>% 
   mutate(varsity = as.logical(varsity)) %>%
   mutate(sport = as.character(sport)) %>%
   mutate(legacy = as.logical(legacy)) %>%
-  mutate(relative_house = as.numeric(relative_house)) %>%
+  mutate(relative_house = as.character(relative_house)) %>%
   mutate(financial_aid = as.logical(financial_aid)) %>%
   mutate(suitemates = as.character(suitemates)) %>% 
   mutate(group_size = as.numeric(group_size)) %>%
@@ -87,7 +87,7 @@ sheet <- sheet %>%
   mutate(group_leader = as.character(group_leader)) %>%
   mutate(group_members = as.character(group_members)) %>%
   mutate(linking_group = as.numeric(linking_group)) %>%
-  mutate(house = as.numeric(house))
+  mutate(house = as.character(house))
 glimpse(sheet)
 ```
 
@@ -317,7 +317,7 @@ for (row in 1:nrow(grouped)) {
 # use join to assign house to other members in the group as well
 
 assigned_all <- left_join(sheet, grouped, by = "group_name") %>% 
-  select(1:24, 46) %>%
+  select(1:23, 46) %>%
   rename_at(.vars = vars(ends_with(".x")),
             .funs = funs(sub("[.]x$", "", .))) %>%
   mutate(house = random_house) %>%
@@ -337,61 +337,69 @@ assigned_all <- left_join(sheet, grouped, by = "group_name") %>%
 
 ```{r create_houses_and_yards}
 
+# need to create houses using a function so we can rep many times 
+# over. Uses double arrow to create variables to the global 
+# environment (in contrast to the local environment of the function)
+
 # filters the assigned data to 
 # populate houses and yards
-
-adams <- assigned_all %>% 
+create_communities <- function(){
+  adams <<- assigned_all %>% 
   filter(house == "Adams")
 
-cabot <- assigned_all %>% 
-  filter(house == "Cabot")
+  cabot <<- assigned_all %>% 
+    filter(house == "Cabot")
+  
+  currier <<- assigned_all %>% 
+    filter(house == "Currier")
+  
+  dunster <<- assigned_all %>% 
+    filter(house == "Dunster")
+  
+  eliot <<- assigned_all %>% 
+    filter(house == "Eliot")
+  
+  kirkland <<- assigned_all %>% 
+    filter(house == "Kirkland")
+  
+  leverett <<- assigned_all %>% 
+    filter(house == "Leverett")
+  
+  lowell <<- assigned_all %>% 
+    filter(house == "Lowell")
+  
+  mather <<- assigned_all %>% 
+    filter(house == "Mather")
+  
+  pfoho <<- assigned_all %>% 
+    filter(house == "Pfoho")
+  
+  quincy <<- assigned_all %>% 
+    filter(house == "Quincy")
+  
+  winthrop <<- assigned_all %>% 
+    filter(house == "Winthrop")
+  
+  square <<- assigned_all %>% 
+    filter(house == "Lowell" | house == "Quincy" | house == "Adams")
+  
+  river_east <<- assigned_all %>% 
+    filter(house == "Leverett" | house == "Dunster" | house == "Mather")
+  
+  river_west <<- assigned_all %>% 
+    filter(house == "Eliot" | house == "Winthrop" | house == "Kirkland")
+  
+  quad <<- assigned_all %>% 
+    filter(house == "Currier" | house == "Pfoho" | house == "Cabot")
+}
 
-currier <- assigned_all %>% 
-  filter(house == "Currier")
-
-dunster <- assigned_all %>% 
-  filter(house == "Dunster")
-
-eliot <- assigned_all %>% 
-  filter(house == "Eliot")
-
-kirkland <- assigned_all %>% 
-  filter(house == "Kirkland")
-
-leverett <- assigned_all %>% 
-  filter(house == "Leverett")
-
-lowell <- assigned_all %>% 
-  filter(house == "Lowell")
-
-mather <- assigned_all %>% 
-  filter(house == "Mather")
-
-pfoho <- assigned_all %>% 
-  filter(house == "Pfoho")
-
-quincy <- assigned_all %>% 
-  filter(house == "Quincy")
-
-winthrop <- assigned_all %>% 
-  filter(house == "Winthrop")
-
-square <- assigned_all %>% 
-  filter(house == "Lowell" | house == "Quincy" | house == "Adams")
-
-river_east <- assigned_all %>% 
-  filter(house == "Leverett" | house == "Dunster" | house == "Mather")
-
-river_west <- assigned_all %>% 
-  filter(house == "Eliot" | house == "Winthrop" | house == "Kirkland")
-
-quad <- assigned_all %>% 
-  filter(house == "Currier" | house == "Pfoho" | house == "Cabot")
+create_communities()
 
 ```
 
 ```{r}
-overview <- function(community){
+
+overview <- function(community = assigned_all){
   
   tibble(
     prop_sex = mean(community$sex),
@@ -417,6 +425,7 @@ overview <- function(community){
   
 }
 
+overview()
 overview(square)
 overview(river_east)
 overview(river_west)
@@ -426,6 +435,22 @@ overview(pfoho)
 
 ```
 
+```{r}
+
+
+# Need to create a function that assigns 
+# blocking groups to houses. That's what needs
+# to be redone multiple times. What about defining the
+# house communities? Does that need to be done?
+# multiple_houses <- tibble(
+#   id = 1:3,
+#   students = (assigned_all %>% nest()),
+#   
+# )
+# 
+# multiple_houses
+
+```
 
 
 
@@ -468,6 +493,7 @@ Problems/Questions:
 1639 values long, will all the code be 
 generalizable if we don't get 1639 responses?
 - need data to assess if certain identities block together 
+- do this multiple times and create confidence intervals
 
 
 
