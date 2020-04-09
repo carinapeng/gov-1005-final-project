@@ -174,8 +174,8 @@ sheet <- randomize_id()
 sheet <- mutate(sheet, international = rep(c(0,1), c(1345, 294))) 
 
 # assign legacy
-# 0 = no: 14% (1410)
-# 1 = yes: 86% (229)
+# 0 = no: 86% (1410)
+# 1 = yes: 14% (229)
 sheet <- randomize_id()
 sheet <- mutate(sheet, legacy = rep(c(0,1), c(1410, 229))) 
 
@@ -313,7 +313,6 @@ for (row in 1:nrow(grouped)) {
     else {grouped[row,"random_house"]<- "Winthrop"}
 }
 
-
 # use join to assign house to other members in the group as well
 
 assigned_all <- left_join(sheet, grouped, by = "group_name") %>% 
@@ -344,6 +343,7 @@ assigned_all <- left_join(sheet, grouped, by = "group_name") %>%
 # filters the assigned data to 
 # populate houses and yards
 create_communities <- function(){
+  
   adams <<- assigned_all %>% 
   filter(house == "Adams")
 
@@ -408,9 +408,9 @@ overview <- function(community = assigned_all){
     prop_legacy = mean(community$legacy),
     prop_financial_aid = mean(community$financial_aid),
     prop_group_size = mean(community$group_size),
-    prop_white = community %>% 
+    prop_white = community %>%
       filter(ethnicity == 1) %>% 
-      count() %>% 
+      count() %>%
       pull()/nrow(community)
   )
   # prop_ethnicity
@@ -430,7 +430,6 @@ overview(square)
 overview(river_east)
 overview(river_west)
 overview(quad)
-overview(pfoho)
 
 
 ```
@@ -483,7 +482,7 @@ overview(pfoho)
 ```
 
 ```{r saveRDS}
-saveRDS(object = sheet, file = "shiny_app/updated_fake_data.RDS")
+saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 ```
 
 
