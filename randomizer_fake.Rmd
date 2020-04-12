@@ -522,10 +522,14 @@ quad <- all_communities %>%
 
 ```{r analysis}
 
-# ci_river_central <- confidence_interval(river_central, 0.025, 0.975)
-# ci_river_central
+ci_river <- confidence_interval(river)
+ci_river
 
-ci_quincy <- confidence_interval(all_communities %>% select(replicate, winthrop) %>% unnest(winthrop))
+ci_quad <- confidence_interval(quad)
+ci_quad
+
+
+# river <- confidence_interval(all_communities %>% select(replicate, quincy) %>% unnest(quincy))
 
 
 #   write_excel_csv2(path = 'quincy.csv') %>% 
@@ -533,8 +537,6 @@ ci_quincy <- confidence_interval(all_communities %>% select(replicate, winthrop)
 # convert("quincy.csv", "quincy.xlsx")
 
 
-ci_quincy
- 
 ```
 
 
@@ -551,23 +553,7 @@ saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 ```
 
 
-# Problems/Questions:
-- Does assign_houses maintain everyone's personal identifiers or does it assign the attributes from the first person in the block to everyone?
 
-
-# Next steps (BEFORE survey results complete):
-- Create new rows from other people's responses
-- Practice cleaning names and blocking group names
-- Practice joining full list of first years with survey results
-- Practice analyzing real data 
-- Create summary statistics for categorical data
-
-# Next steps (AFTER survey results complete):
-- Clean up data to have all block names unique (go through and do a rep function to assign numeric blocking group names to all floaters)
-- Left_join the complete first_years spreadsheet with the survey responses (fill in what we know and accommodate any typos or differences in names)
-
-# Notes:
-- DO NOT need to assign block IDs (name to number)
 
 
 

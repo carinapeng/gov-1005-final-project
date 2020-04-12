@@ -16,6 +16,7 @@ library(gt)
 library(shiny)
 library(infer)
 library(googlesheets4)
+library(fastLink)
 ```
 
 ```{r}
@@ -264,6 +265,21 @@ river
 quad
 
 ```
+
+
+
+
+
+```{r data_cleaning}
+
+fastLink(respondents$what_is_your_blocking_group_name_all_lowercase_with_no_spaces)
+
+
+
+```
+
+
+
 
 
 

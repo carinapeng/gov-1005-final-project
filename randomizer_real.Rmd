@@ -459,23 +459,6 @@ saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 ```
 
 
-Problems/Questions:
-- Group_id #180 is skipped.
-- Given that the fake dataset is
-1639 values long, will all the code be 
-generalizable if we don't get 1639 responses?
-- need data to assess if certain identities block together 
-- do this multiple times and create confidence intervals
-
-
-Next steps:
-- Clean up data to have all block names correct
-- Create new rows from other people's responses
-- Left_join the complete first_years spreadsheet with the survey responses (fill in what we know)
-
-
-Notes:
-- DO NOT need to assign block IDs (name to number)
 
 
 

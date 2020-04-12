@@ -1,0 +1,29 @@
+---
+title: "notes"
+author: "Jamal Nimer"
+date: "4/12/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Problems/Questions:
+- Does assign_houses maintain everyone's personal identifiers or does it assign the attributes from the first person in the block to everyone?
+
+
+# Next steps (BEFORE survey results complete):
+- Create new rows from other people's responses
+- Practice cleaning names and blocking group names
+- Practice joining full list of first years with survey results
+- Practice analyzing real data 
+- Create summary statistics for categorical data
+
+# Next steps (AFTER survey results complete):
+- Clean up data to have all block names unique (go through and do a rep function to assign numeric blocking group names to all floaters)
+- Left_join the complete first_years spreadsheet with the survey responses (fill in what we know and accommodate any typos or differences in names)
+
+# Notes:
+- DO NOT need to assign block IDs (name to number)
