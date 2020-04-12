@@ -524,7 +524,7 @@ quad <- all_communities %>%
 
 ci_river <- confidence_interval(river, 0.025, 0.975)
 ci_river
-
+ 
 ```
 
 
