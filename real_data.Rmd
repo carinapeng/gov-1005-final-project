@@ -92,250 +92,6 @@ glimpse(sheet)
 ```
 
 
-```{r assign_id}
-
-# unneeded in randomizer_real
-
-# each student is given a
-# temporary id. This is used
-# to shuffle students later
-# on in the code. When the
-# ids are reassigned and arranged,
-# then the order of students changes.
-# This ensures that variables
-# in the fake data are 
-# random (not correlated).
-
-mutate(sheet, id = 1:1639)
-randomize_id <- function(){
-  num_list = sample.int(n = 1639, size = 1639)
-  sheet %>% 
-    mutate(id = num_list) %>% 
-    arrange(id)
-}
-```
-
-```{r assign_attributes}
-
-# unneeded in randomizer_real
-
-# assigns most of the variables
-# to the fake data set. First, the percentage
-# of a specific variable's distribution
-# is calculated. Then values for that variable
-# are assigned based on the variable's distribution.
-# Before the next variable is assigned, the 
-# IDs are randomized. This ensures that not all 
-# males (assigned to the first 50% of the
-# data) are also White or Asian (assigned to the 
-# first 61% of the data). Otherwise, all variables 
-# would be correlated.
-
-# assign sex 
-# 0 = m: 50% (819)
-# 1 = f: 50% (820)
-sheet <- randomize_id()
-sheet <- mutate(sheet, sex = rep(c(0, 1), c(819, 820)))
-
-# assign ethnicity
-# 1 = White: 44% (721)
-# 2 = Asian: 17% (280)
-# 3 = Black: 11% (180)
-# 4 = Hispanic/LatinX: 11% (180)
-# 5 = Middle Eastern/North African 2% (33)
-# 6 = Indigenous/Native American: 1% (16)
-# 7 = Prefer not to say: 7% (115)
-# 8 = Other: 7% (114)
-sheet <- randomize_id()
-sheet <- mutate(sheet, ethnicity = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(721, 280, 180, 180, 33, 16, 115, 114))) 
-
-# assign religion
-# 1 = Agnostic: 21% (344)
-# 2 = Christian: 34% (557)
-# 3 = Atheist: 17% (279)
-# 4 = Jewish: 10% (160)
-# 5 = Hindu: 3% (49)
-# 6 = Muslim: 3% (49)
-# 7 = Prefer not to say: 6% (101)
-# 8 = Other: 6% (100)
-sheet <- randomize_id()
-sheet <- mutate(sheet, religion = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(344, 557, 279, 160, 49, 49, 101, 100)))
-  
-# assign sexual_orientation
-# 1 = Heterosexual: 82% (1344)
-# 2 = Homosexual: 7% (115)
-# 3 = Bisexual: 7% (115)
-# 4 = Asexual: 1% (16)
-# 5 = Prefer not to say: 2% (32)
-# 6 = Other: 1% (17)
-sheet <- randomize_id()
-sheet <- mutate(sheet, sexual_orientation = rep(c(1, 2, 3, 4, 5, 6), c(1344, 115, 115, 16, 32, 17)))
-  
-# assign international
-# 0 = Domestic: 88% (1345)
-# 1 = International: 18% (294)
-sheet <- randomize_id()
-sheet <- mutate(sheet, international = rep(c(0,1), c(1345, 294))) 
-
-# assign legacy
-# 0 = no: 86% (1410)
-# 1 = yes: 14% (229)
-sheet <- randomize_id()
-sheet <- mutate(sheet, legacy = rep(c(0,1), c(1410, 229))) 
-
-# assign financial aid
-# 0 = no: 45% (738)
-# 1 = yes: 55% (901)
-sheet <- randomize_id()
-sheet <- mutate(sheet, financial_aid = rep(c(0,1), c(738, 901))) 
-
-# assign suitemates
-# 0 = no: 85% (1393)
-# 1 = yes: 15% (246)
-sheet <- randomize_id()
-sheet <- mutate(sheet, suitemates = rep(c(0,1), c(1393, 246))) 
-
-# assign group_size and group_name
-# 1: 8% (130)
-# 2: 6% (98)
-# 3: 7% (114)
-# 4: 11% (180)
-# 5: 12% (195)
-# 6: 20% (330)
-# 7: 17% (280)
-# 8: 19% (312)
-
-
-# first I assign group sizes to everyone
-# in the dataset. Next, a group_name is 
-# assigned to everyone. I assign group
-# name using rep(x, y) where I go through
-# rep range x, y times. 
-
-sheet <- randomize_id()
-sheet <- mutate(sheet, 
-                group_size = rep(c(1, 2, 3, 4, 5, 6, 7, 8), c(130, 98, 114, 180, 195, 330, 280, 312)),
-                group_name = c(rep(1:130, 1),
-                        rep(131:179, 2), 
-                        
-                        # missing group 180
-                        
-                        rep(181:218, 3),
-                        rep(219:263, 4),
-                        rep(264:302, 5),
-                        rep(303:357, 6),
-                        rep(358:397, 7),
-                        rep(398:436, 8)
-                        ))
-# varsity athlete?
-sheet <- sheet %>% 
-  mutate(varsity = ifelse(!is.na(sport), TRUE, FALSE))
-```
-
-
-```{r calculate_house_size}
-# create houses
-# respondent is the variable name of the total number of respondents. 
-# Here we find number of people in our sample that are supposed to be in each house 
-# We begin by listing the cutoff number of students in each house
-respondents <- sheet %>%
-  count() %>%
-  pull()
-total_uppseclassmen <- 4527
-num_adams <- round(263 / total_uppseclassmen * respondents, 0)
-num_cabot <- round((263+357) / total_uppseclassmen * respondents, 0)
-num_currier <- round((263+357+364) / total_uppseclassmen * respondents, 0)
-num_dunster <- round((263+357+364+376) / total_uppseclassmen * respondents,0)
-num_eliot <- round((263+357+364+376+425) / total_uppseclassmen * respondents, 0)
-num_kirkland <- round((263+357+364+376+425+386) / total_uppseclassmen * respondents, 0)
-num_leverett <- round((263+357+364+376+425+386+322) / total_uppseclassmen * respondents, 0)
-num_lowell <- round((263+357+364+376+425+386+322+407) / total_uppseclassmen * respondents, 0)
-num_mather <- round((263+357+364+376+425+386+322+407+399) / total_uppseclassmen * respondents, 0)
-num_pfoho <- round((263+357+364+376+425+386+322+407+399+365) / total_uppseclassmen * respondents, 0)
-num_quincy <- round((263+357+364+376+425+386+322+407+399+365+465) / total_uppseclassmen * respondents, 0)
-num_winthrop <- round((263+357+364+376+425+386+322+407+399+365+465+398) / total_uppseclassmen * respondents, 0)
-```
-
-
-```{r assign_houses}
-
-# assign houses
-
-# takes in sheet and assigns houses randomly. group_name
-# has to be unique because we group_by the group_name, but
-# it does not have to be a numerical variable. The group_name
-# can be anything.
-
-assign_houses <- function(sheet = sheet){
-  grouped <- sheet %>% 
-    mutate(random_house = "") %>% 
-    group_by(group_name) %>% 
-    slice(1)
-  
-  rows <- sample(nrow(grouped))
-  grouped <- grouped[rows, ]
-  
-  count <- 0
-  for (row in 1:nrow(grouped)) {
-      if((count + grouped[row,"group_size"] )<= num_adams) {
-          grouped[row,"random_house"]<- "Adams"
-          count <- count+ grouped[row,"group_size"]
-      }
-        
-      else if(num_adams < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_cabot) {
-          grouped[row,"random_house"]<- "Cabot"
-          count <- count+ grouped[row,"group_size"]
-      }
-      
-      else if (num_cabot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_currier){ grouped[row,"random_house"]<- "Currier"
-           count <- count+ grouped[row,"group_size"]}
-  
-      else if (num_currier < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_dunster){ grouped[row,"random_house"]<- "Dunster"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_dunster < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_eliot){ grouped[row,"random_house"]<- "Eliot"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_eliot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_kirkland){ grouped[row,"random_house"]<- "Kirkland"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_kirkland < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_leverett){ grouped[row,"random_house"]<- "Leverett"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_leverett < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_lowell){ grouped[row,"random_house"]<- "Lowell"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_lowell < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_mather){ grouped[row,"random_house"]<- "Mather"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_mather < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_pfoho){ grouped[row,"random_house"]<- "Pfoho"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_pfoho < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_quincy){ grouped[row,"random_house"]<- "Quincy"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else {grouped[row,"random_house"]<- "Winthrop"}
-  }
-    
-  # combines the original sheet with the "grouped" sheet
-  # which assigns the house to the first person in every bloc.
-  # Once these two are joined, every person in the original
-  # sheet has a house.
-  
-  assigned_all <- left_join(sheet, grouped, by = "group_name") %>% 
-  select(1:23, 46) %>%
-  rename_at(.vars = vars(ends_with(".x")),
-            .funs = funs(sub("[.]x$", "", .))) %>%
-  mutate(house = random_house) %>%
-  select(-random_house)
-  
-  # returns assigned_all which contains house assignments
-  # for every person in the original first_years spreadsheet.
-  
-  assigned_all
-}
-```
-
 ```{r overview_function}
 
 # generates summary statistics for any identifiable community. 
@@ -371,7 +127,7 @@ overview <- function(assigned, community){
 
   else if(community == "quad"){
     community <- assigned %>%
-      filter(house == "Pfoho" | house == "Cabot" | house == "Currier")
+      filter(house == "Pforzheimer" | house == "Cabot" | house == "Currier")
   }
 
   else{
@@ -413,25 +169,8 @@ overview <- function(assigned, community){
 
 ```
 
-```{r confidence_interval}
 
-# function to caluculate confidence intervals 
-# that takes in the lower percentile and the
-# upper percentile. A community must be passed
-# in that has already had overview() called on it.
-confidence_interval <- function(community, lower_percentile, upper_percentile){
-  percentiles <- tibble(
-    percentile = c(lower_percentile, upper_percentile),
-    prop_sex = quantile(community %>% ungroup() %>% pull(prop_sex), c(lower_percentile, upper_percentile)),
-    prop_international = quantile(community %>% ungroup() %>% pull(prop_international), c(lower_percentile, upper_percentile)),
-    prop_varsity = quantile(community %>% ungroup() %>% pull(prop_varsity), c(lower_percentile, upper_percentile)),
-    prop_legacy = quantile(community %>% ungroup() %>% pull(prop_legacy), c(lower_percentile, upper_percentile)),
-    prop_financial_aid = quantile(community %>% ungroup() %>% pull(prop_financial_aid), c(lower_percentile, upper_percentile)),
-    prop_group_size = quantile(community %>% ungroup() %>% pull(prop_group_size), c(lower_percentile, upper_percentile))   
-  )
-  percentiles
-}
-```
+
 
 
 ```{r all_communities}
@@ -445,50 +184,42 @@ confidence_interval <- function(community, lower_percentile, upper_percentile){
 # This tibble can be filtered down for any desired sub communities
 # as done in later r code chunks
 
-
 all_communities <- sheet %>% 
   
-  # 1) replicate the sheet of freshmen and group_by each replicate
+  # 1) take the sheet of freshman and nest
+  nest(data=everything()) %>% 
   
-  rep_sample_n(size = nrow(sheet), replace = FALSE, reps = 2) %>% 
-  group_by(replicate)  %>% 
-  nest() %>% 
-  
-  # 2) take each tibble of freshmen and assign houses
-  
-  mutate(assigned = map(data,~assign_houses(sheet = .))) %>% 
-  
-  # 3) take each tibble of "assigned" freshmen and generate community summaries
+  # 2) take each tibble of "assigned" freshmen and generate community summaries
   
   # neighborhoods
-  mutate(river_central = map(assigned, ~overview(assigned = ., community = 'river_central'))) %>% 
-  mutate(river_east = map(assigned, ~overview(assigned = ., community = 'river_east'))) %>% 
-  mutate(river_west = map(assigned, ~overview(assigned = ., community = 'river_west'))) %>% 
-  mutate(river = map(assigned, ~overview(assigned = ., community = 'river'))) %>% 
-  mutate(quad = map(assigned, ~overview(assigned = ., community = 'quad'))) %>% 
+  mutate(river_central = map(data, ~overview(assigned = ., community = 'river_central'))) %>% 
+  mutate(river_east = map(data, ~overview(assigned = ., community = 'river_east'))) %>% 
+  mutate(river_west = map(data, ~overview(assigned = ., community = 'river_west'))) %>% 
+  mutate(river = map(data, ~overview(assigned = ., community = 'river'))) %>% 
+  mutate(quad = map(data, ~overview(assigned = ., community = 'quad'))) %>% 
   
   #river_central
-  mutate(adams = map(assigned, ~overview(assigned = ., community = 'Adams'))) %>% 
-  mutate(lowell = map(assigned, ~overview(assigned = ., community = 'Lowell'))) %>% 
-  mutate(quincy = map(assigned, ~overview(assigned = ., community = 'Quincy'))) %>% 
+  mutate(adams = map(data, ~overview(assigned = ., community = 'Adams'))) %>% 
+  mutate(lowell = map(data, ~overview(assigned = ., community = 'Lowell'))) %>% 
+  mutate(quincy = map(data, ~overview(assigned = ., community = 'Quincy'))) %>% 
   
   
   # river_east
-  mutate(leverett = map(assigned, ~overview(assigned = ., community = 'Leverett'))) %>% 
-  mutate(dunster = map(assigned, ~overview(assigned = ., community = 'Dunster'))) %>% 
-  mutate(mather = map(assigned, ~overview(assigned = ., community = 'Mather'))) %>%  
+  mutate(leverett = map(data, ~overview(assigned = ., community = 'Leverett'))) %>% 
+  mutate(dunster = map(data, ~overview(assigned = ., community = 'Dunster'))) %>% 
+  mutate(mather = map(data, ~overview(assigned = ., community = 'Mather'))) %>%  
   
   
   # river_west
-  mutate(winthrop = map(assigned, ~overview(assigned = ., community = 'Winthrop'))) %>% 
-  mutate(kirkland = map(assigned, ~overview(assigned = ., community = 'Kirkland'))) %>% 
-  mutate(eliot = map(assigned, ~overview(assigned = ., community = 'Eliot'))) %>%   
+  mutate(winthrop = map(data, ~overview(assigned = ., community = 'Winthrop'))) %>% 
+  mutate(kirkland = map(data, ~overview(assigned = ., community = 'Kirkland'))) %>% 
+  mutate(eliot = map(data, ~overview(assigned = ., community = 'Eliot'))) %>%   
   
   
   # quad
-  mutate(currier = map(assigned, ~overview(assigned = ., community = 'Currier'))) %>% 
-  mutate(pfoho = map(assigned, ~overview(assigned = ., community = 'Pfoho'))) %>% 
-  mutate(cabot = map(assigned, ~overview(assigned = ., community = 'Cabot'))) 
+  mutate(currier = map(data, ~overview(assigned = ., community = 'Currier'))) %>% 
+  mutate(pforzheimer = map(data, ~overview(assigned = ., community = 'Pforzheimer'))) %>% 
+  mutate(cabot = map(data, ~overview(assigned = ., community = 'Cabot'))) 
 
 ```
 
@@ -497,33 +228,33 @@ all_communities <- sheet %>%
 # generates summary statistics for neighborhoods
 
 neighborhoods <- all_communities %>% 
-  select(replicate, river_central, river_east, river_west, quad) 
+  select(river_central, river_east, river_west, quad) 
 
 river_central <- all_communities %>% 
-  select(replicate, river_central) %>% 
+  select(river_central) %>% 
   unnest(river_central)
 
 river_east <- all_communities %>% 
-  select(replicate, river_east) %>% 
+  select(river_east) %>% 
   unnest(river_east)
 
 river_west <- all_communities %>% 
-  select(replicate, river_west) %>% 
+  select(river_west) %>% 
   unnest(river_west)
 
 river <- all_communities %>% 
-  select(replicate, river) %>% 
+  select(river) %>% 
   unnest(river)
 
 quad <- all_communities %>% 
-  select(replicate, quad) %>% 
+  select(quad) %>% 
   unnest(quad)
 ```
 
 ```{r analysis}
 
-ci_river <- confidence_interval(river, 0.025, 0.975)
-ci_river
+river
+quad
 
 ```
 
@@ -535,7 +266,6 @@ saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 
 
 # Problems/Questions:
-
 
 # Next steps (BEFORE survey results complete):
 - Create new rows from other people's responses
