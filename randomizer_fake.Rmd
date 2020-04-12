@@ -399,7 +399,7 @@ overview <- function(assigned, community){
       count() %>%
       pull()/nrow(community)
   )
-  # prop_ethnicity
+  # prop_ethnicity 
   # prop_religion
   # prop_sexual_orientation
   
@@ -419,15 +419,15 @@ overview <- function(assigned, community){
 # that takes in the lower percentile and the
 # upper percentile. A community must be passed
 # in that has already had overview() called on it.
-confidence_interval <- function(community, lower_percentile, upper_percentile){
+confidence_interval <- function(community, lower_percentile = 0.025, median = 0.5, upper_percentile = 0.975){
   percentiles <- tibble(
-    percentile = c(lower_percentile, upper_percentile),
-    prop_sex = quantile(community %>% ungroup() %>% pull(prop_sex), c(lower_percentile, upper_percentile)),
-    prop_international = quantile(community %>% ungroup() %>% pull(prop_international), c(lower_percentile, upper_percentile)),
-    prop_varsity = quantile(community %>% ungroup() %>% pull(prop_varsity), c(lower_percentile, upper_percentile)),
-    prop_legacy = quantile(community %>% ungroup() %>% pull(prop_legacy), c(lower_percentile, upper_percentile)),
-    prop_financial_aid = quantile(community %>% ungroup() %>% pull(prop_financial_aid), c(lower_percentile, upper_percentile)),
-    prop_group_size = quantile(community %>% ungroup() %>% pull(prop_group_size), c(lower_percentile, upper_percentile))   
+    percentile = c(lower_percentile, median, upper_percentile),
+    prop_sex = quantile(community %>% ungroup() %>% pull(prop_sex), c(lower_percentile, median, upper_percentile)),
+    prop_international = quantile(community %>% ungroup() %>% pull(prop_international), c(lower_percentile, median, upper_percentile)),
+    prop_varsity = quantile(community %>% ungroup() %>% pull(prop_varsity), c(lower_percentile, median, upper_percentile)),
+    prop_legacy = quantile(community %>% ungroup() %>% pull(prop_legacy), c(lower_percentile, median, upper_percentile)),
+    prop_financial_aid = quantile(community %>% ungroup() %>% pull(prop_financial_aid), c(lower_percentile, median, upper_percentile)),
+    prop_group_size = quantile(community %>% ungroup() %>% pull(prop_group_size), c(lower_percentile, median, upper_percentile))   
   )
   percentiles
 }
@@ -450,7 +450,7 @@ all_communities <- sheet %>%
   
   # 1) replicate the sheet of freshmen and group_by each replicate
   
-  rep_sample_n(size = nrow(sheet), replace = FALSE, reps = 2) %>% 
+  rep_sample_n(size = nrow(sheet), replace = FALSE, reps = 5) %>% 
   group_by(replicate)  %>% 
   nest() %>% 
   
@@ -522,19 +522,37 @@ quad <- all_communities %>%
 
 ```{r analysis}
 
-ci_river <- confidence_interval(river, 0.025, 0.975)
-ci_river
+# ci_river_central <- confidence_interval(river_central, 0.025, 0.975)
+# ci_river_central
+
+ci_quincy <- confidence_interval(all_communities %>% select(replicate, winthrop) %>% unnest(winthrop))
+
+
+#   write_excel_csv2(path = 'quincy.csv') %>% 
+# 
+# convert("quincy.csv", "quincy.xlsx")
+
+
+ci_quincy
  
 ```
 
 
 
 ```{r saveRDS}
+# saveRDS(object = all_communities, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = river, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = quad, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = river_central, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = river_east, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = river_west, file = "shiny_app/updated_fake_data.RDS")
+
 saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 ```
 
 
 # Problems/Questions:
+- Does assign_houses maintain everyone's personal identifiers or does it assign the attributes from the first person in the block to everyone?
 
 
 # Next steps (BEFORE survey results complete):
