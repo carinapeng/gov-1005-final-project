@@ -1,0 +1,16 @@
+---
+title: "MS6"
+author: "Jamal Nimer, Sam Saba, Lucy He, Eliot Min, Angie Shin, Austin Li, Shojeh Liu, Carina Peng, Ilyas Mardin"
+date: "4/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Github link: https://github.com/jamalnimer/gov-1005-final-project
+
+Shiny App: https://jamal-nimer.shinyapps.io/shiny_app/
+
+Minutes: https://docs.google.com/document/d/1vGoyMsGXPgt-EgaRGJTi6kpgdIvTuGnQZXLNhtSgUx0/edit?usp=sharing

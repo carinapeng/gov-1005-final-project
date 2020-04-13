@@ -1,0 +1,76 @@
+---
+title: "april-study-hall"
+author: "Jamal Nimer"
+date: "4/7/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(reprex)
+library(janitor)
+library(gt)
+library(shiny)
+library(googlesheets4)
+```
+
+```{r}
+
+# reads in from the "first_years"
+# google sheet in the project drive
+
+sheets_deauth()
+
+ss = "https://docs.google.com/spreadsheets/d/1d8TlsQLzm15eSbcYhCPANcIUwWmMymRRwYBrUP3RtB8/edit?usp=sharing"
+
+sheet <- read_sheet(ss) %>%
+  clean_names() %>% 
+  select(-timestamp,-email_address)
+
+
+```
+
+
+
+
+split the strings using the commas.
+ 
+Reference the list of all the freshman. 
+
+Cross-reference the names from the blocking group responses to the full list of students.
+
+Assign a block id from the names.
+
+Find out all the hoco members, and get housing assignments from them.
+
+predicting race from name? 
+
+Match on blocking group leader instead of blocking group name.
+
+---------
+
+create list of blocking group leaders
+
+for loop and go through and assign each person to their blocking group leader
+
+Empty dataframe > block leader, house, group size, > get block leader take blocking group leaders > take each person's list of block mate and corresponding blocking group leader 
+
+Using google sheets:
+- create a range of names from the first_years sheet
+- create a range of names from the respondents sheet 
+- using conditional formatting, check if the respondents range has an exact match in the first_years range and if the first_years range has an exact match in the respondents range (highlight exact matches in green, highlight unmatched data in both ranges in red)
+- put red data from both ranges in a new sheet and try to find pairs. 
+
+
+
+```{r}
+
+View(sheet)
+
+```
+
+
+

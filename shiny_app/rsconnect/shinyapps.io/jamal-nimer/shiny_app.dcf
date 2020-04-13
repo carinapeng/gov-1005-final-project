@@ -1,0 +1,12 @@
+name: shiny_app
+title: shiny_app
+username:
+account: jamal-nimer
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2054250
+bundleId: 2966704
+url: https://jamal-nimer.shinyapps.io/shiny_app/
+when: 1585956844.99302
+asMultiple: FALSE
+asStatic: FALSE
