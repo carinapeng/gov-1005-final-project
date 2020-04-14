@@ -1,7 +1,7 @@
 ---
 title: "real_data"
-author: "Jamal Nimer"
-date: "4/11/2020"
+author: "Jamal Nimer, Lucy He"
+date: "4/13/2020"
 output: html_document
 ---
 
@@ -13,8 +13,10 @@ library(readxl)
 library(reprex)
 library(janitor)
 library(gt)
+library(haven)
 library(shiny)
 library(infer)
+library(dplyr)
 library(googlesheets4)
 ```
 
@@ -29,11 +31,15 @@ first_years_link <- 'https://docs.google.com/spreadsheets/d/18Nbt_VtV1YARn311z0t
 respondents_link <- 'https://docs.google.com/spreadsheets/d/1d8TlsQLzm15eSbcYhCPANcIUwWmMymRRwYBrUP3RtB8/edit#gid=1296173271'
 
 sheet <- read_sheet(ss= first_years_link) %>%
-  clean_names() 
+  clean_names() %>%
+  mutate(name = paste(first_name, last_name, sep = " "))
 
 respondents <- read_sheet(ss = respondents_link) %>% 
   clean_names() %>% 
-  select(-timestamp, -email_address)
+  select(-timestamp, -email_address)%>% 
+  mutate(group_size = as.numeric(as.factor(sapply(what_is_your_blocking_group_size_including_yourself, toString))))%>%
+  select(-what_is_your_blocking_group_size_including_yourself)
+
 ```
 
 ```{r clean_names, echo = FALSE}
@@ -42,23 +48,29 @@ respondents <- read_sheet(ss = respondents_link) %>%
 # and reassigns column names
 
 # clean column_names
-names(sheet)[names(sheet) == "ethnicity_check_all_that_apply"]<-"ethnicity"
-names(sheet)[names(sheet) == "religion_check_all_that_apply"] <- "religion"
-names(sheet)[names(sheet) == "are_you_an_international_student"] <- "international"
-names(sheet)[names(sheet) == "are_you_an_international_student"] <- "international"
-names(sheet)[names(sheet) == "if_you_answered_yes_to_being_an_international_student_what_country_are_you_from"]<- "country"
-names(sheet)[names(sheet) == "if_you_answered_yes_to_being_a_varsity_athlete_what_sport_do_you_play_on"]<- "sport"
-names(sheet)[names(sheet) == "are_you_a_varsity_athlete"]<- "varsity"
-names(sheet)[names(sheet)=="if_you_answered_yes_to_being_a_legacy_student_what_house_was_your_relative_in"]<- "relative_house"
-names(sheet)[names(sheet) == "are_you_on_any_financial_aid"]<- "financial_aid"
-names(sheet)[names(sheet) == "what_is_your_blocking_group_size"]<-"group_size"
-names(sheet)[names(sheet)=="what_is_your_blocking_group_name_all_lowercase_with_no_spaces"]<- "group_name"
-names(sheet)[names(sheet)=="what_is_your_blocking_group_leaders_name_first_and_last_ex_john_doe"]<- "group_leader"
-names(sheet)[names(sheet)=="are_you_blocking_with_any_of_your_suitemates"]<- "suitemates"
-names(sheet)[names(sheet)=="what_house_were_you_placed_in"]<- "house"
-names(sheet)[names(sheet)=="if_you_are_linking_please_provide_the_first_and_last_name_of_one_person_from_your_linking_group"] <- "linking_group"
-names(sheet)[names(sheet)=="please_list_all_members_in_your_blocking_group_separated_by_commas_first_and_last_ex_john_doe_john_harvard"]<- "group_members"
-sheet
+names(respondents)[names(respondents) == "ethnicity_check_all_that_apply"]<-"ethnicity"
+names(respondents)[names(respondents) == "religion_check_all_that_apply"] <- "religion"
+names(respondents)[names(respondents) == "are_you_an_international_student"] <- "international"
+names(respondents)[names(respondents) == "are_you_an_international_student"] <- "international"
+names(respondents)[names(respondents) == "if_you_answered_yes_to_being_an_international_student_what_country_are_you_from"]<- "country"
+names(respondents)[names(respondents) == "if_you_answered_yes_to_being_a_varsity_athlete_what_sport_do_you_play_on"]<- "sport"
+names(respondents)[names(respondents) == "are_you_a_varsity_athlete"]<- "varsity"
+names(respondents)[names(respondents)=="if_you_answered_yes_to_being_a_legacy_student_what_house_was_your_relative_in"]<- "relative_house"
+names(respondents)[names(respondents) == "are_you_on_any_financial_aid"]<- "financial_aid"
+names(respondents)[names(respondents)=="what_is_your_blocking_group_name_all_lowercase_with_no_spaces"]<- "group_name"
+names(respondents)[names(respondents)=="what_is_your_blocking_group_leaders_name_first_and_last_ex_john_doe"]<- "group_leader"
+names(respondents)[names(respondents)=="are_you_blocking_with_any_of_your_suitemates"]<- "suitemates"
+names(respondents)[names(respondents)=="what_house_were_you_placed_in"]<- "house"
+names(respondents)[names(respondents)=="if_you_are_linking_please_provide_the_first_and_last_name_of_one_person_from_your_linking_group"] <- "linking_group"
+names(respondents)[names(respondents)=="please_list_all_members_in_your_blocking_group_separated_by_commas_first_and_last_ex_john_doe_john_harvard"]<- "group_members"
+names(respondents)[names(respondents) == "blocking_group_member_2_first_name_last_name"]<- "member2"
+names(respondents)[names(respondents) == "blocking_group_member_3_first_name_last_name"]<- "member3"
+names(respondents)[names(respondents) == "blocking_group_member_4_first_name_last_name"]<- "member4"
+names(respondents)[names(respondents) == "blocking_group_member_5_first_name_last_name"]<- "member5"
+names(respondents)[names(respondents) == "blocking_group_member_6_first_name_last_name"]<- "member6"
+names(respondents)[names(respondents) == "blocking_group_member_7_first_name_last_name"]<- "member7"
+names(respondents)[names(respondents) == "blocking_group_member_8_first_name_last_name"]<- "member8"
+names(respondents)[names(respondents) == "reasons_for_blocking_with_your_suitemates_select_the_most_relevant"]<- "suitemate"
 ```
 
 ```{r assign_class}
@@ -71,31 +83,72 @@ sheet
 # values are defined later on (eg 
 # when ethnicity == 1, it means that
 # the ethnicity is White.)
+# 
+# respondents <- respondents %>% 
+#   mutate(first_name = as.character(first_name)) %>% 
+#   mutate(last_name = as.character(last_name)) %>% 
+#   mutate(freshman_dorm = as.character(freshman_dorm)) %>% 
+#   mutate(religion = as.character(religion)) %>% 
+#   mutate(sexual_orientation = as.character(sexual_orientation)) %>%
+#   mutate(relative_house = as.character(relative_house)) %>%
+#   mutate(group_size = as.numeric(group_size)) %>%
+#   mutate(group_leader = as.character(group_leader)) %>%
+#   mutate(blocking_group_member_2_first_name_last_name = as.character(blocking_group_member_2_first_name_last_name)) %>%
+#   mutate(blocking_group_member_3_first_name_last_name = as.character(blocking_group_member_3_first_name_last_name)) %>%
+#   mutate(blocking_group_member_4_first_name_last_name = as.character(blocking_group_member_4_first_name_last_name)) %>%
+#   mutate(blocking_group_member_5_first_name_last_name = as.character(blocking_group_member_5_first_name_last_name)) %>%
+#   mutate(blocking_group_member_6_first_name_last_name = as.character(blocking_group_member_6_first_name_last_name)) %>%
+#   mutate(blocking_group_member7_first_name_last_name = as.character(blocking_group_member_7_first_name_last_name)) %>%
+#   mutate(blocking_group_member_8_first_name_last_name = as.character(blocking_group_member_8_first_name_last_name)) %>%
+#   mutate(linking_group = as.numeric(linking_group)) %>%
+#   mutate(house = as.character(house))
+# glimpse(respondents)
+```
 
-sheet <- sheet %>% 
-  mutate(first_name = as.character(first_name)) %>% 
-  mutate(last_name = as.character(last_name)) %>% 
-  mutate(freshman_dorm = as.character(freshman_dorm)) %>% 
-  mutate(entryway = as.character(entryway)) %>% 
-  mutate(sex = as.logical(sex)) %>% 
-  mutate(ethnicity = as.numeric(ethnicity)) %>% 
-  mutate(religion = as.character(religion)) %>% 
-  mutate(sexual_orientation = as.character(sexual_orientation)) %>%
-  mutate(international = as.logical(international)) %>%
-  mutate(country = as.character(country)) %>% 
-  mutate(varsity = as.logical(varsity)) %>%
-  mutate(sport = as.character(sport)) %>%
-  mutate(legacy = as.logical(legacy)) %>%
-  mutate(relative_house = as.character(relative_house)) %>%
-  mutate(financial_aid = as.logical(financial_aid)) %>%
-  mutate(suitemates = as.character(suitemates)) %>% 
-  mutate(group_size = as.numeric(group_size)) %>%
-  mutate(group_name = as.numeric(group_name)) %>%
-  mutate(group_leader = as.character(group_leader)) %>%
-  mutate(group_members = as.character(group_members)) %>%
-  mutate(linking_group = as.numeric(linking_group)) %>%
-  mutate(house = as.character(house))
-glimpse(sheet)
+```{r}
+# create rows that list individual members of a blocking group
+
+# respondents1 has the fullname column called name
+respondents1 <- respondents %>%
+  mutate(name = paste(first_name, last_name, sep = " "))
+
+# pivot_longer to list individuals' names
+# join the original table so that the group data are synced
+
+temp <- respondents %>%
+  mutate(member1 = paste(first_name, last_name, sep = " "))%>%
+  group_by(group_leader) %>%
+  slice(1) %>% 
+  select(member1,c(member2:member8),group_name,group_leader)%>%
+ pivot_longer(
+   cols = starts_with("member"),
+   names_to = "member",
+   values_to = "name"
+ )
+
+# new table is the new respondents table with synced group data
+
+new<-respondents %>%
+  left_join(temp,by = c("group_name","group_leader")) %>%
+  filter(!is.na(name))%>%
+  select(group_name, group_leader,linking_group,house,is_your_house_the_best_house,group_size, member,name)
+
+part_respondents <- respondents1 %>%
+  select(name,c(freshman_dorm:suitemate)) 
+
+# combined is the new sheet that has everybody's name in each row
+# group information is synced 
+# individual information is shown if the person filled out our survey
+
+half_combined <- new %>%
+  left_join(part_respondents, by = "name") %>%
+  select(name, everything())%>%
+  group_by(name) %>%
+  slice(1)
+
+full_combined <- sheet %>%
+  select(name, what_house_were_you_placed_in) %>%
+  left_join(half_combined, by = "name")
 ```
 
 
@@ -191,7 +244,7 @@ overview <- function(assigned, community){
 # This tibble can be filtered down for any desired sub communities
 # as done in later r code chunks
 
-all_communities <- sheet %>% 
+all_communities <- respondents %>% 
   
   # 1) take the sheet of freshman and nest
   nest(data=everything()) %>% 
@@ -264,7 +317,6 @@ river
 quad
 
 ```
-
 
 
 ```{r saveRDS}
