@@ -190,6 +190,9 @@ quad <- all_communities %>%
 river
 quad
 
+# use a chisq.test(x = a numeric vector or matrix,
+#                  y = a vector, ignored if x is a matrix)
+
 ```
 
 
