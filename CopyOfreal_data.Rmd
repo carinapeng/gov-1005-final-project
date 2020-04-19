@@ -1,0 +1,327 @@
+---
+title: "real_data"
+author: "Jamal Nimer, Lucy He"
+date: "4/13/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(reprex)
+library(janitor)
+library(gt)
+library(haven)
+library(shiny)
+library(infer)
+library(dplyr)
+library(googlesheets4)
+```
+
+```{r}
+# reads in from the "first_years"
+# google sheet in the project drive
+
+sheets_deauth()
+  
+first_years_link <- 'https://docs.google.com/spreadsheets/d/18Nbt_VtV1YARn311z0t2z9vh5DuzAVCGLJrvRsqHuLs/edit#gid=390915712'
+
+respondents_link <- 'https://docs.google.com/spreadsheets/d/1pcDSa3cnT0q7RMJtuNX-O0aE2otdhl1AuhRyEp-KqZA/edit?usp=sharing'
+
+sheet <- read_sheet(ss= first_years_link) %>%
+  clean_names() %>%
+  mutate(name = paste(first_name, last_name, sep = " "))
+
+respondents <- read_sheet(ss = respondents_link) %>% 
+    mutate(group_size = as.numeric(as.factor(sapply(group_size, toString))))
+
+```
+
+```{r clean_names, echo = FALSE}
+
+# takes the sheet of first_years
+# and reassigns column names
+
+# clean column_names
+names(respondents)[names(respondents) == "ethnicity_check_all_that_apply"]<-"ethnicity"
+names(respondents)[names(respondents) == "religion_check_all_that_apply"] <- "religion"
+names(respondents)[names(respondents) == "are_you_an_international_student"] <- "international"
+names(respondents)[names(respondents) == "are_you_an_international_student"] <- "international"
+names(respondents)[names(respondents) == "if_you_answered_yes_to_being_an_international_student_what_country_are_you_from"]<- "country"
+names(respondents)[names(respondents) == "if_you_answered_yes_to_being_a_varsity_athlete_what_sport_do_you_play_on"]<- "sport"
+names(respondents)[names(respondents) == "are_you_a_varsity_athlete"]<- "varsity"
+names(respondents)[names(respondents)=="if_you_answered_yes_to_being_a_legacy_student_what_house_was_your_relative_in"]<- "relative_house"
+names(respondents)[names(respondents) == "are_you_on_any_financial_aid"]<- "financial_aid"
+names(respondents)[names(respondents)=="what_is_your_blocking_group_name_all_lowercase_with_no_spaces"]<- "group_name"
+names(respondents)[names(respondents)=="what_is_your_blocking_group_leaders_name_first_and_last_ex_john_doe"]<- "group_leader"
+names(respondents)[names(respondents)=="are_you_blocking_with_any_of_your_suitemates"]<- "suitemates"
+names(respondents)[names(respondents)=="what_house_were_you_placed_in"]<- "house"
+names(respondents)[names(respondents)=="if_you_are_linking_please_provide_the_first_and_last_name_of_one_person_from_your_linking_group"] <- "linking_group"
+names(respondents)[names(respondents)=="please_list_all_members_in_your_blocking_group_separated_by_commas_first_and_last_ex_john_doe_john_harvard"]<- "group_members"
+names(respondents)[names(respondents) == "blocking_group_member_2_first_name_last_name"]<- "member2"
+names(respondents)[names(respondents) == "blocking_group_member_3_first_name_last_name"]<- "member3"
+names(respondents)[names(respondents) == "blocking_group_member_4_first_name_last_name"]<- "member4"
+names(respondents)[names(respondents) == "blocking_group_member_5_first_name_last_name"]<- "member5"
+names(respondents)[names(respondents) == "blocking_group_member_6_first_name_last_name"]<- "member6"
+names(respondents)[names(respondents) == "blocking_group_member_7_first_name_last_name"]<- "member7"
+names(respondents)[names(respondents) == "blocking_group_member_8_first_name_last_name"]<- "member8"
+names(respondents)[names(respondents) == "reasons_for_blocking_with_your_suitemates_select_the_most_relevant"]<- "suitemate"
+```
+
+```{r assign_class}
+
+# takes the sheet of first_years
+# and assigns the correct class
+# to each variable. Variables like
+# 'religion' and 'ethnicity' are 
+# given numeric values. The numeric
+# values are defined later on (eg 
+# when ethnicity == 1, it means that
+# the ethnicity is White.)
+# 
+# respondents <- respondents %>% 
+#   mutate(first_name = as.character(first_name)) %>% 
+#   mutate(last_name = as.character(last_name)) %>% 
+#   mutate(freshman_dorm = as.character(freshman_dorm)) %>% 
+#   mutate(religion = as.character(religion)) %>% 
+#   mutate(sexual_orientation = as.character(sexual_orientation)) %>%
+#   mutate(relative_house = as.character(relative_house)) %>%
+#   mutate(group_size = as.numeric(group_size)) %>%
+#   mutate(group_leader = as.character(group_leader)) %>%
+#   mutate(blocking_group_member_2_first_name_last_name = as.character(blocking_group_member_2_first_name_last_name)) %>%
+#   mutate(blocking_group_member_3_first_name_last_name = as.character(blocking_group_member_3_first_name_last_name)) %>%
+#   mutate(blocking_group_member_4_first_name_last_name = as.character(blocking_group_member_4_first_name_last_name)) %>%
+#   mutate(blocking_group_member_5_first_name_last_name = as.character(blocking_group_member_5_first_name_last_name)) %>%
+#   mutate(blocking_group_member_6_first_name_last_name = as.character(blocking_group_member_6_first_name_last_name)) %>%
+#   mutate(blocking_group_member7_first_name_last_name = as.character(blocking_group_member_7_first_name_last_name)) %>%
+#   mutate(blocking_group_member_8_first_name_last_name = as.character(blocking_group_member_8_first_name_last_name)) %>%
+#   mutate(linking_group = as.numeric(linking_group)) %>%
+#   mutate(house = as.character(house))
+# glimpse(respondents)
+```
+
+```{r}
+# create rows that list individual members of a blocking group
+
+# respondents1 has the fullname column called name
+respondents1 <- respondents %>%
+  mutate(name = full_name) %>% 
+  select(-full_name)
+
+# pivot_longer to list individuals' names
+# join the original table so that the group data are synced
+
+temp <- respondents %>%
+  mutate(member1 = paste(first_name, last_name, sep = " "))%>%
+  group_by(group_leader) %>%
+  slice(1) %>% 
+  select(member1,c(member2:member8),group_name,group_leader)%>%
+ pivot_longer(
+   cols = starts_with("member"),
+   names_to = "member",
+   values_to = "name"
+ )
+
+# new table is the new respondents table with synced group data
+
+new<-respondents %>%
+  left_join(temp,by = c("group_name","group_leader")) %>%
+  filter(!is.na(name))%>%
+  select(group_name, group_leader,linking,house,approval,group_size, member,name)
+
+part_respondents <- respondents1 %>%
+  select(name,c(dorm:suitemates)) 
+
+# combined is the new sheet that has everybody's name in each row
+# group information is synced 
+# individual information is shown if the person filled out our survey
+
+half_combined <- new %>%
+  left_join(part_respondents, by = "name") %>%
+  select(name, everything())%>%
+  group_by(name) %>%
+  slice(1)
+
+full_combined <- sheet %>%
+  select(name, house) %>%
+  left_join(half_combined, by = "name")
+```
+
+
+```{r overview_function}
+
+# generates summary statistics for any identifiable community. 
+# It takes in a sheet of assigned houses and then also takes
+# in a community within the assigned sheet that you would like
+# to filter for. It takes in assigned as a variable because 
+# later we use a map function to pass in a unique set of assigned
+# houses.
+#
+# summary statistics are returned in the form of a tibble
+
+overview <- function(assigned, community){
+    
+  if(community == "river_central"){
+    community <- assigned %>%
+    filter(house == "Lowell" | house == "Quincy" | house == "Adams")
+  }
+
+  else if(community == "river_east"){
+    community <- assigned %>%
+      filter(house == "Leverett" | house == "Dunster" | house == "Mather")
+  }
+
+  else if(community == "river_west"){
+    community <- assigned %>%
+      filter(house == "Eliot" | house == "Winthrop" | house == "Kirkland")
+  }
+  
+  else if(community == "river"){
+    community <- assigned %>%
+    filter(house == "Lowell" | house == "Quincy" | house == "Adams" | house == "Leverett" | house == "Dunster" | house == "Mather" | house == "Eliot" | house == "Winthrop" | house == "Kirkland")
+  }
+
+  else if(community == "quad"){
+    community <- assigned %>%
+      filter(house == "Pforzheimer" | house == "Cabot" | house == "Currier")
+  }
+
+  else{
+    community <- assigned %>%
+    filter(house == community)
+  }
+  
+  # the method in which summary statistics are generated still needs to
+  # be modified. Considering making a tibble for all categorical variables
+  # like ethnicity or religion. This might be complicated because when we 
+  # use this function within a map on an already existing tibble, we will have
+  # a tibble (the tibble of ethnicity/religion distribution) within a tibble 
+  # (the tibble of summary statistics) within a tibble (the tibble of random 
+  # house assignment replicates). 
+  
+  tibble(
+    prop_sex = mean(community$sex),
+    prop_international = mean(community$international),
+    prop_varsity = mean(community$varsity),
+    prop_legacy = mean(community$legacy),
+    prop_financial_aid = mean(community$financial_aid),
+    prop_group_size = mean(community$group_size),
+    prop_white = community %>%
+      filter(ethnicity == 1) %>% 
+      count() %>%
+      pull()/nrow(community)
+  )
+  # prop_ethnicity
+  # prop_religion
+  # prop_sexual_orientation
+  
+  # consider separating out categorical variables 
+  # and creating separate plots
+  
+  # can do individual ethnicities or put together
+  # a tibble with all of the ethnicities.
+  
+}
+
+```
+
+
+
+
+
+```{r all_communities}
+
+# creates a tibble of all communities (neighborhoods AND houses)
+# n times where n represents the number of reps in the rep_sample_n.
+# This tibble is then used to generate summary statistics for 
+# each community. It relies on the previous functions for
+# (1) assigning houses and (2) generating summary statistics.
+#
+# This tibble can be filtered down for any desired sub communities
+# as done in later r code chunks
+
+all_communities <- respondents %>% 
+  
+  # 1) take the sheet of freshman and nest
+  nest(data=everything()) %>% 
+  
+  # 2) take each tibble of "assigned" freshmen and generate community summaries
+  
+  # neighborhoods
+  mutate(river_central = map(data, ~overview(assigned = ., community = 'river_central'))) %>% 
+  mutate(river_east = map(data, ~overview(assigned = ., community = 'river_east'))) %>% 
+  mutate(river_west = map(data, ~overview(assigned = ., community = 'river_west'))) %>% 
+  mutate(river = map(data, ~overview(assigned = ., community = 'river'))) %>% 
+  mutate(quad = map(data, ~overview(assigned = ., community = 'quad'))) %>% 
+  
+  #river_central
+  mutate(adams = map(data, ~overview(assigned = ., community = 'Adams'))) %>% 
+  mutate(lowell = map(data, ~overview(assigned = ., community = 'Lowell'))) %>% 
+  mutate(quincy = map(data, ~overview(assigned = ., community = 'Quincy'))) %>% 
+  
+  
+  # river_east
+  mutate(leverett = map(data, ~overview(assigned = ., community = 'Leverett'))) %>% 
+  mutate(dunster = map(data, ~overview(assigned = ., community = 'Dunster'))) %>% 
+  mutate(mather = map(data, ~overview(assigned = ., community = 'Mather'))) %>%  
+  
+  
+  # river_west
+  mutate(winthrop = map(data, ~overview(assigned = ., community = 'Winthrop'))) %>% 
+  mutate(kirkland = map(data, ~overview(assigned = ., community = 'Kirkland'))) %>% 
+  mutate(eliot = map(data, ~overview(assigned = ., community = 'Eliot'))) %>%   
+  
+  
+  # quad
+  mutate(currier = map(data, ~overview(assigned = ., community = 'Currier'))) %>% 
+  mutate(pforzheimer = map(data, ~overview(assigned = ., community = 'Pforzheimer'))) %>% 
+  mutate(cabot = map(data, ~overview(assigned = ., community = 'Cabot'))) 
+
+```
+
+```{r neighborhoods}
+
+# generates summary statistics for neighborhoods
+
+neighborhoods <- all_communities %>% 
+  select(river_central, river_east, river_west, quad) 
+
+river_central <- all_communities %>% 
+  select(river_central) %>% 
+  unnest(river_central)
+
+river_east <- all_communities %>% 
+  select(river_east) %>% 
+  unnest(river_east)
+
+river_west <- all_communities %>% 
+  select(river_west) %>% 
+  unnest(river_west)
+
+river <- all_communities %>% 
+  select(river) %>% 
+  unnest(river)
+
+quad <- all_communities %>% 
+  select(quad) %>% 
+  unnest(quad)
+```
+
+```{r analysis}
+
+river
+quad
+
+```
+
+
+```{r saveRDS}
+saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
+```
+
+
+
+
+

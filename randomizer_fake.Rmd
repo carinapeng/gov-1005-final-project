@@ -347,6 +347,10 @@ assign_houses <- function(sheet = sheet){
 #
 # summary statistics are returned in the form of a tibble
 
+# cycle through all the houses, don't fill one out completely
+# and then fill out the next house because it might skew the
+# distribution of group_size.
+
 overview <- function(assigned, community){
     
   if(community == "river_central"){
@@ -450,7 +454,7 @@ all_communities <- sheet %>%
   
   # 1) replicate the sheet of freshmen and group_by each replicate
   
-  rep_sample_n(size = nrow(sheet), replace = FALSE, reps = 5) %>% 
+  rep_sample_n(size = nrow(sheet), replace = FALSE, reps = 10) %>% 
   group_by(replicate)  %>% 
   nest() %>% 
   
@@ -536,6 +540,12 @@ ci_quad
 # 
 # convert("quincy.csv", "quincy.xlsx")
 
+# 1 - 0.95^12
+
+# is there evidence that athletes are randomly distributed across all 12 houses.
+# If athletes are randomly distributed, some houses will be above, and some will be
+# below. You need a sum of the deviation from the mean for all houses --> sum of squared 
+# differences of the mean for the houses. 
 
 ```
 
