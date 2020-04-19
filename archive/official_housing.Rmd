@@ -8,13 +8,14 @@ knitr::opts_chunk$set(echo = FALSE)
 ```
 
 
-```{r}
+```{r load_libraries}
 library(tidyverse)
 library(googlesheets4)
+library(rio)
 ```
 
 
-```{r}
+```{r read_sheets}
 ss1 <- "https://docs.google.com/spreadsheets/d/1pcDSa3cnT0q7RMJtuNX-O0aE2otdhl1AuhRyEp-KqZA/edit#gid=1174393477"
 
 ss2 <- "https://docs.google.com/spreadsheets/d/1XXfXeCznOiK7Lhp_QUPqlsqiPwMWIUWM48pTkADdPmY/edit#gid=1449741562"
@@ -23,14 +24,14 @@ ss3 <- "https://docs.google.com/spreadsheets/d/1chv3WHBGhjK5szM2RPCjakzHBCChfmZG
 
 sheets_deauth()
 
-clean_data <- sheets_read(ss1)
+clean_data <- sheets_read(ss1) 
 pivoted_validation <- sheets_read(ss2)
 first_years <- sheets_read(ss3)
 
 ```
 
 
-```{r}
+```{r join_data}
 
 partial <- left_join(x = first_years,
           y = clean_data,
@@ -38,6 +39,19 @@ partial <- left_join(x = first_years,
 
 official_housing <- left_join(x = partial,
                               y = pivoted_validation,
-                              by = c("full_name"))
+                              by = c("full_name")) 
 
 ```
+
+```{r write_data}
+
+write_excel_csv2(official_housing, path = "../official_housing.csv") 
+
+convert("../official_housing.csv", "../official_housing.xlsx")
+
+```
+
+
+
+
+
