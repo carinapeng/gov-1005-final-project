@@ -107,9 +107,6 @@ overview <- function(assigned, community){
 ```
 
 
-
-
-
 ```{r all_communities}
 
 # creates a tibble of all communities (neighborhoods AND houses)

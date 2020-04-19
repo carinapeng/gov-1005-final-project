@@ -45,9 +45,9 @@ official_housing <- left_join(x = partial,
 
 ```{r write_data}
 
-write_excel_csv2(official_housing, path = "../official_housing.csv") 
+write_excel_csv2(official_housing, path = "official_housing.csv") 
 
-convert("../official_housing.csv", "../official_housing.xlsx")
+convert("official_housing.csv", "official_housing.xlsx")
 
 ```
 

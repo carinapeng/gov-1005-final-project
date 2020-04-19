@@ -5,6 +5,9 @@ date: "3/26/2020"
 output: html_document
 ---
 
+
+# This deleted .Rmd used to create confidence intervals based on fake data generated within the sheet
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
@@ -19,15 +22,13 @@ library(googlesheets4)
 ```
 
 ```{r}
-
 # reads in from the "first_years"
 # google sheet in the project drive
 
 sheets_deauth()
   
 sheet <- read_sheet(ss= "https://docs.google.com/spreadsheets/d/18Nbt_VtV1YARn311z0t2z9vh5DuzAVCGLJrvRsqHuLs/edit#gid=1531565679") %>%
-  clean_names() %>%
-  select(-timestamp,-email_address)
+  clean_names()
 ```
 
 ```{r clean_names, echo = FALSE}
@@ -95,6 +96,8 @@ glimpse(sheet)
 
 ```{r assign_id}
 
+# unneeded in randomizer_real
+
 # each student is given a
 # temporary id. This is used
 # to shuffle students later
@@ -115,6 +118,8 @@ randomize_id <- function(){
 ```
 
 ```{r assign_attributes}
+
+# unneeded in randomizer_real
 
 # assigns most of the variables
 # to the fake data set. First, the percentage
@@ -234,7 +239,7 @@ sheet <- sheet %>%
 # create houses
 # respondent is the variable name of the total number of respondents. 
 # Here we find number of people in our sample that are supposed to be in each house 
-# First we begin by listing the cutoff number of students in each house
+# We begin by listing the cutoff number of students in each house
 respondents <- sheet %>%
   count() %>%
   pull()
@@ -258,7 +263,10 @@ num_winthrop <- round((263+357+364+376+425+386+322+407+399+365+465+398) / total_
 
 # assign houses
 
-# takes in sheet and assigns houses randomly
+# takes in sheet and assigns houses randomly. group_name
+# has to be unique because we group_by the group_name, but
+# it does not have to be a numerical variable. The group_name
+# can be anything.
 
 assign_houses <- function(sheet = sheet){
   grouped <- sheet %>% 
@@ -311,6 +319,11 @@ assign_houses <- function(sheet = sheet){
       else {grouped[row,"random_house"]<- "Winthrop"}
   }
     
+  # combines the original sheet with the "grouped" sheet
+  # which assigns the house to the first person in every bloc.
+  # Once these two are joined, every person in the original
+  # sheet has a house.
+  
   assigned_all <- left_join(sheet, grouped, by = "group_name") %>% 
   select(1:23, 46) %>%
   rename_at(.vars = vars(ends_with(".x")),
@@ -318,11 +331,27 @@ assign_houses <- function(sheet = sheet){
   mutate(house = random_house) %>%
   select(-random_house)
   
+  # returns assigned_all which contains house assignments
+  # for every person in the original first_years spreadsheet.
+  
   assigned_all
 }
 ```
 
-```{r}
+```{r overview_function}
+
+# generates summary statistics for any identifiable community. 
+# It takes in a sheet of assigned houses and then also takes
+# in a community within the assigned sheet that you would like
+# to filter for. It takes in assigned as a variable because 
+# later we use a map function to pass in a unique set of assigned
+# houses.
+#
+# summary statistics are returned in the form of a tibble
+
+# cycle through all the houses, don't fill one out completely
+# and then fill out the next house because it might skew the
+# distribution of group_size.
 
 overview <- function(assigned, community){
     
@@ -340,6 +369,11 @@ overview <- function(assigned, community){
     community <- assigned %>%
       filter(house == "Eliot" | house == "Winthrop" | house == "Kirkland")
   }
+  
+  else if(community == "river"){
+    community <- assigned %>%
+    filter(house == "Lowell" | house == "Quincy" | house == "Adams" | house == "Leverett" | house == "Dunster" | house == "Mather" | house == "Eliot" | house == "Winthrop" | house == "Kirkland")
+  }
 
   else if(community == "quad"){
     community <- assigned %>%
@@ -351,6 +385,13 @@ overview <- function(assigned, community){
     filter(house == community)
   }
   
+  # the method in which summary statistics are generated still needs to
+  # be modified. Considering making a tibble for all categorical variables
+  # like ethnicity or religion. This might be complicated because when we 
+  # use this function within a map on an already existing tibble, we will have
+  # a tibble (the tibble of ethnicity/religion distribution) within a tibble 
+  # (the tibble of summary statistics) within a tibble (the tibble of random 
+  # house assignment replicates). 
   
   tibble(
     prop_sex = mean(community$sex),
@@ -364,7 +405,7 @@ overview <- function(assigned, community){
       count() %>%
       pull()/nrow(community)
   )
-  # prop_ethnicity
+  # prop_ethnicity 
   # prop_religion
   # prop_sexual_orientation
   
@@ -376,87 +417,153 @@ overview <- function(assigned, community){
   
 }
 
-# overview()
-# overview(river_central)
-# overview(river_east)
-# overview(river_west)
-# overview(quad)
-
-
 ```
 
-```{r}
+```{r confidence_interval}
+
+# function to caluculate confidence intervals 
+# that takes in the lower percentile and the
+# upper percentile. A community must be passed
+# in that has already had overview() called on it.
+confidence_interval <- function(community, lower_percentile = 0.025, median = 0.5, upper_percentile = 0.975){
+  percentiles <- tibble(
+    percentile = c(lower_percentile, median, upper_percentile),
+    prop_sex = quantile(community %>% ungroup() %>% pull(prop_sex), c(lower_percentile, median, upper_percentile)),
+    prop_international = quantile(community %>% ungroup() %>% pull(prop_international), c(lower_percentile, median, upper_percentile)),
+    prop_varsity = quantile(community %>% ungroup() %>% pull(prop_varsity), c(lower_percentile, median, upper_percentile)),
+    prop_legacy = quantile(community %>% ungroup() %>% pull(prop_legacy), c(lower_percentile, median, upper_percentile)),
+    prop_financial_aid = quantile(community %>% ungroup() %>% pull(prop_financial_aid), c(lower_percentile, median, upper_percentile)),
+    prop_group_size = quantile(community %>% ungroup() %>% pull(prop_group_size), c(lower_percentile, median, upper_percentile))   
+  )
+  percentiles
+}
+```
+
+
+```{r all_communities}
+
+# creates a tibble of all communities (neighborhoods AND houses)
+# n times where n represents the number of reps in the rep_sample_n.
+# This tibble is then used to generate summary statistics for 
+# each community. It relies on the previous functions for
+# (1) assigning houses and (2) generating summary statistics.
+#
+# This tibble can be filtered down for any desired sub communities
+# as done in later r code chunks
+
 
 all_communities <- sheet %>% 
-  rep_sample_n(size = nrow(sheet), replace = FALSE, reps = 2) %>% 
+  
+  # 1) replicate the sheet of freshmen and group_by each replicate
+  
+  rep_sample_n(size = nrow(sheet), replace = FALSE, reps = 10) %>% 
   group_by(replicate)  %>% 
-  
-  # break here and assign [1] houses to every single person using map.
-  # then assign [2] community using map
-  # then select replicate, community, group_by replicate and summarize all the summary statistics.
-  
-  # before I can continue, I have to go back and generalize the 
-  # house and community assignment functions
   nest() %>% 
+  
+  # 2) take each tibble of freshmen and assign houses
+  
   mutate(assigned = map(data,~assign_houses(sheet = .))) %>% 
+  
+  # 3) take each tibble of "assigned" freshmen and generate community summaries
+  
+  # neighborhoods
   mutate(river_central = map(assigned, ~overview(assigned = ., community = 'river_central'))) %>% 
   mutate(river_east = map(assigned, ~overview(assigned = ., community = 'river_east'))) %>% 
   mutate(river_west = map(assigned, ~overview(assigned = ., community = 'river_west'))) %>% 
-  mutate(river_central = map(assigned, ~overview(assigned = ., community = 'river_central'))) %>% 
+  mutate(river = map(assigned, ~overview(assigned = ., community = 'river'))) %>% 
+  mutate(quad = map(assigned, ~overview(assigned = ., community = 'quad'))) %>% 
+  
+  #river_central
+  mutate(adams = map(assigned, ~overview(assigned = ., community = 'Adams'))) %>% 
+  mutate(lowell = map(assigned, ~overview(assigned = ., community = 'Lowell'))) %>% 
+  mutate(quincy = map(assigned, ~overview(assigned = ., community = 'Quincy'))) %>% 
+  
+  
+  # river_east
+  mutate(leverett = map(assigned, ~overview(assigned = ., community = 'Leverett'))) %>% 
+  mutate(dunster = map(assigned, ~overview(assigned = ., community = 'Dunster'))) %>% 
+  mutate(mather = map(assigned, ~overview(assigned = ., community = 'Mather'))) %>%  
+  
+  
+  # river_west
+  mutate(winthrop = map(assigned, ~overview(assigned = ., community = 'Winthrop'))) %>% 
+  mutate(kirkland = map(assigned, ~overview(assigned = ., community = 'Kirkland'))) %>% 
+  mutate(eliot = map(assigned, ~overview(assigned = ., community = 'Eliot'))) %>%   
+  
+  
+  # quad
   mutate(currier = map(assigned, ~overview(assigned = ., community = 'Currier'))) %>% 
-  mutate(cabot = map(assigned, ~overview(assigned = ., community = 'Cabot'))) %>% 
-  mutate(pfoho = map(assigned, ~overview(assigned = ., community = 'Pfoho'))) 
-
+  mutate(pfoho = map(assigned, ~overview(assigned = ., community = 'Pfoho'))) %>% 
+  mutate(cabot = map(assigned, ~overview(assigned = ., community = 'Cabot'))) 
 
 ```
 
-```{r}
+```{r neighborhoods}
+
+# generates summary statistics for neighborhoods
 
 neighborhoods <- all_communities %>% 
-  select(replicate, river_central, currier, cabot, pfoho) %>% 
+  select(replicate, river_central, river_east, river_west, quad) 
+
+river_central <- all_communities %>% 
+  select(replicate, river_central) %>% 
   unnest(river_central)
-# adams_tibbles <- all_communities %>% 
-#   select(replicate, adams_data) %>% 
-#   unnest(adams_data) 
+
+river_east <- all_communities %>% 
+  select(replicate, river_east) %>% 
+  unnest(river_east)
+
+river_west <- all_communities %>% 
+  select(replicate, river_west) %>% 
+  unnest(river_west)
+
+river <- all_communities %>% 
+  select(replicate, river) %>% 
+  unnest(river)
+
+quad <- all_communities %>% 
+  select(replicate, quad) %>% 
+  unnest(quad)
+```
+
+```{r analysis}
+
+ci_river <- confidence_interval(river)
+ci_river
+
+ci_quad <- confidence_interval(quad)
+ci_quad
+
+
+# river <- confidence_interval(all_communities %>% select(replicate, quincy) %>% unnest(quincy))
+
+
+#   write_excel_csv2(path = 'quincy.csv') %>% 
 # 
-# prop_adams_athlete <- adams_tibbles %>% 
-#   ungroup() %>%
-#   summarize(mean = mean(prop_varsity))
+# convert("quincy.csv", "quincy.xlsx")
 
+# 1 - 0.95^12
 
-
-
-
-```
-
-
-```{r}
-
-all_communities %>% 
-  filter(first_name == "Austin", last_name == "Li") %>% 
-  select(group_name, house)
+# is there evidence that athletes are randomly distributed across all 12 houses.
+# If athletes are randomly distributed, some houses will be above, and some will be
+# below. You need a sum of the deviation from the mean for all houses --> sum of squared 
+# differences of the mean for the houses. 
 
 ```
 
-
-```{r}
-
-all_communities <- tibble(
-  replicate = c(1,2,3),
-  data = tibble(c(1,2,3)),
-  assigned = tibble(c(1,2,3)),
-  overview_adams = tibble(c(1,2,3))
-
-)
-
-all_communities
-
-```
 
 
 ```{r saveRDS}
+# saveRDS(object = all_communities, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = river, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = quad, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = river_central, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = river_east, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = river_west, file = "shiny_app/updated_fake_data.RDS")
+
 saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 ```
+
 
 
 
