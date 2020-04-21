@@ -1,6 +1,6 @@
 ---
 title: "real_data"
-author: "Jamal Nimer, Lucy He"
+author: "Jamal Nimer, Lucy He, Austin Li"
 date: "4/13/2020"
 output: html_document
 ---
@@ -31,6 +31,215 @@ ss1 <- 'https://docs.google.com/spreadsheets/d/1edQVynHA0j7Dnnth8qTvQtmS3ww768ly
 official_housing <- read_sheet(ss1) 
 
 ```
+
+```{r prop function, echo=F}
+
+# determining proportions
+# general prop function
+
+prop <- function(list1,list2) {
+  length(list1)/length(list2)
+}
+```
+
+
+```{r ethnicity, echo=F}
+
+# ethnicity
+# selecting rows into a list
+
+ethnicity <- function(community) {
+  w <- which(grepl("White", community$ethnicity))
+  a <- which(grepl("Asian", community$ethnicity))
+  b <- which(grepl("Black", community$ethnicity))
+  hl <- which(grepl("Hispanic/Latinx", community$ethnicity))
+  mena <- which(grepl("Middle Eastern/North African", community$ethnicity))
+  indna <- which(grepl("Indigenous/Native American", community$ethnicity))
+  eth_pref <- which(grepl("Prefer not to say", community$ethnicity))
+  total_ethnicity = c(w, a, b, hl, mena, indna, eth_pref)
+  
+  prop_ethnicity_tibble <- tibble(
+  prop_white = prop(w, total_ethnicity),
+  prop_asian = prop(a, total_ethnicity),
+  prop_black = prop(b, total_ethnicity),
+  prop_hl = prop(hl, total_ethnicity),
+  prop_mena = prop(mena, total_ethnicity),
+  prop_indna = prop(indna, total_ethnicity),
+  prop_eth_pref = prop(eth_pref, total_ethnicity)
+  )
+  
+  prop_ethnicity_tibble
+}
+```
+
+```{r religion, echo=F}
+
+# religion
+
+religion <- function(community) {
+  christ <- which(grepl("Christian", community$religion))
+  hindu <- which(grepl("Hindu", community$religion))
+  muslim <- which(grepl("Muslim", community$religion))
+  jewish <- which(grepl("Jewish", community$religion))
+  agnos <- which(grepl("Agnostic", community$religion))
+  athiest <- which(grepl("Athiest", community$religion))
+  relig_pref <- which(grepl("Prefer not to say", community$religion))
+
+# total religions reported
+  
+  total_relig = c(christ, hindu, muslim, jewish, agnos, athiest, relig_pref)
+
+# religion proportions table
+  prop_relig_table <- tibble(
+    prop_christ = prop(christ, total_relig),
+    prop_hindu = prop(hindu, total_relig),
+    prop_muslim = prop(muslim, total_relig),
+    prop_jewish = prop(jewish, total_relig),
+    prop_agnos = prop(agnos, total_relig),
+    prop_athiest = prop(athiest, total_relig),
+    prop_relig_pref = prop(relig_pref, total_relig)
+  )
+
+  prop_relig_table
+}
+```
+
+```{r sex_or, echo=F}
+
+# sexual orientation
+
+sexual_orientation <- function(community) {
+  hetero <- which(grepl("Heterosexual", community$sexual_orientation))
+  homo <- which(grepl("Homosexual", community$sexual_orientation))
+  bi <- which(grepl("Bisexual", community$sexual_orientation))
+  as <- which(grepl("Asexual", community$sexual_orientation))
+  sex_pref <- which(grepl("Prefer not to say", community$sexual_orientation))
+
+# total sexual orientations reported
+
+  total_sex <- c(hetero, homo, bi, as, sex_pref)
+
+# sexual orientation proportions table
+
+  prop_sex_tibble <- tibble(
+    prop_hetero = prop(hetero, total_sex),
+    prop_homo = prop(homo, total_sex),
+    prop_bi = prop(bi, total_sex),
+    prop_as = prop(as, total_sex),
+    prop_sex_pref = prop(sex_pref, total_sex)
+  )
+
+  prop_sex_tibble
+}
+
+```
+
+```{r reason_suitemates, echo=F}
+
+# blocking with suitemates
+
+suitemates <- function(community) {
+  suite_yes <- which(grepl("Yes", community$suitemates))
+  suite_no <- which(grepl("No", community$suitemates))
+
+# total suite
+
+  total_suite <- c(suite_yes, suite_no)
+
+# blocking with suitemates proportions table
+
+  prop_suite_tibble <- tibble(
+    prop_suite_yes = prop(suite_yes, total_suite),
+    prop_suite_no = prop(suite_no, total_suite)
+  )
+  
+  prop_suite_tibble
+}
+
+# reason for blocking with suitemates
+
+suitemates_reasons <- function(community) {
+  sleep <- which(grepl("Similar sleeping schedules", community$reason_suitemates))
+  aca_int <- which(grepl("Common academic interests", community$reason_suitemates))
+  hobbies <- which(grepl("Common hobbies", community$reason_suitemates))
+  friends <- which(grepl("Similar friend groups", community$reason_suitemates))
+  music <- which(grepl("Same taste for music", community$reason_suitemates))
+  religion <- which(grepl("Same religion", community$reason_suitemates))
+
+# total suite_reasons reported
+
+  total_suite_reasons <- c(sleep, aca_int, hobbies, friends, music, religion)
+
+# blocking with suitemates reason proportions table
+
+  prop_suite_reason_tibble <- tibble(
+    prop_sleep = prop(sleep, total_suite_reasons),
+    prop_aca_int = prop(aca_int, total_suite_reasons),
+    prop_hobbies = prop(hobbies, total_suite_reasons),
+    prop_friends = prop(friends, total_suite_reasons),
+    prop_music = prop(music, total_suite_reasons),
+    prop_reigion = prop(religion, total_suite_reasons)
+  )
+
+  prop_suite_reason_tibble
+}
+
+```
+
+```{r group_size, echo=F}
+
+group_size <- function(community) {
+  one <- which(grepl(1, community$group_size))
+  two <- which(grepl(2, community$group_size))
+  three <- which(grepl(3, community$group_size))
+  four <- which(grepl(4, community$group_size))
+  five <- which(grepl(5, community$group_size))
+  six <- which(grepl(6, community$group_size))
+  seven <- which(grepl(7, community$group_size))
+  eight <- which(grepl(8, community$group_size))
+
+# total sizes reported
+
+  total_sizes <- c(one, two, three, four, five, six, seven, eight)
+
+# group size proportions table
+
+  prop_group_size_tibble <- tibble(
+    prop_one = prop(one, total_sizes),
+    prop_two = prop(two, total_sizes),
+    prop_three = prop(three, total_sizes),
+    prop_four = prop(four, total_sizes),
+    prop_five = prop(five, total_sizes),
+    prop_six = prop(six, total_sizes),
+    prop_seven = prop(seven, total_sizes),
+    prop_eight = prop(eight, total_sizes)
+  )
+  
+  prop_group_size_tibble
+}
+```
+
+```{r appr, echo=F}
+
+approval <- function(community) {
+  app_yes <- which(grepl(1, community$approval))
+  app_no <- which(grepl(0, community$approval))
+
+# total approval reported
+
+  total_app = c(app_yes, app_no)
+
+# approval proportions table
+
+  prop_approve <- tibble(
+    prop_app_yes = prop(app_yes, total_app),
+    prop_app_no = prop(app_no, total_app)
+  )
+  
+  prop_approve
+}
+```
+
 
 ```{r overview_function}
 
@@ -88,7 +297,13 @@ overview <- function(assigned, community){
     prop_varsity = mean(community$varsity, na.rm = TRUE),
     prop_legacy = mean(community$legacy, na.rm = TRUE),
     prop_financial_aid = mean(community$financial_aid, na.rm = TRUE),
-    prop_group_size = mean(community$group_size, na.rm = TRUE)
+    prop_ethnicity = as.tibble(ethnicity(community)) %>% nest(),
+    prop_religion = as.tibble(religion(community)) %>% nest(),
+    prop_sexual_orientation = as.tibble(sexual_orientation(community)) %>% nest(),
+    prop_group_size = as.tibble(group_size(community)) %>% nest(),
+    prop_suitemates = as.tibble(suitemates(community)) %>% nest(),
+    prop_suitemates_reasons = as.tibble(suitemates_reasons(community)) %>% nest(),
+    prop_approval = as.tibble(approval(community)) %>% nest()
   )
   # prop_ethnicity
   # prop_religion
@@ -103,7 +318,6 @@ overview <- function(assigned, community){
   # a tibble with all of the ethnicities.
   
 }
-
 ```
 
 
@@ -196,11 +410,21 @@ quad
 ```
 
 
+
 ```{r saveRDS}
-saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 ```
 
 
-
+```{r test}
+all_communities <- official_housing %>% 
+# 1) take the sheet of freshman and nest
+  
+  nest(data=everything()) %>% 
+  
+# 2) take each tibble of "assigned" freshmen and generate community summaries neighborhoods
+  
+  mutate(river_central = map(data, ~overview(assigned = ., community = 'river_central')))
+```
 
 
