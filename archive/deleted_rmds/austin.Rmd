@@ -1,6 +1,6 @@
 ---
 title: "practice_data"
-author: "Lucy He"
+author: "Lucy He, Austin Li"
 date: "3/26/2020"
 output: html_document
 ---
@@ -18,6 +18,7 @@ library(infer)
 library(googlesheets4)
 ```
 
+
 ```{r}
 # reads in from the "first_years"
 # google sheet in the project drive
@@ -26,68 +27,8 @@ sheets_deauth()
   
 sheet <- read_sheet(ss= "https://docs.google.com/spreadsheets/d/18Nbt_VtV1YARn311z0t2z9vh5DuzAVCGLJrvRsqHuLs/edit#gid=1531565679") %>%
   clean_names()
-```
 
-```{r clean_names, echo = FALSE}
-
-# takes the sheet of first_years
-# and reassigns column names
-
-# clean column_names
-names(sheet)[names(sheet) == "ethnicity_check_all_that_apply"]<-"ethnicity"
-names(sheet)[names(sheet) == "religion_check_all_that_apply"] <- "religion"
-names(sheet)[names(sheet) == "are_you_an_international_student"] <- "international"
-names(sheet)[names(sheet) == "are_you_an_international_student"] <- "international"
-names(sheet)[names(sheet) == "if_you_answered_yes_to_being_an_international_student_what_country_are_you_from"]<- "country"
-names(sheet)[names(sheet) == "if_you_answered_yes_to_being_a_varsity_athlete_what_sport_do_you_play_on"]<- "sport"
-names(sheet)[names(sheet) == "are_you_a_varsity_athlete"]<- "varsity"
-names(sheet)[names(sheet)=="if_you_answered_yes_to_being_a_legacy_student_what_house_was_your_relative_in"]<- "relative_house"
-names(sheet)[names(sheet) == "are_you_on_any_financial_aid"]<- "financial_aid"
-names(sheet)[names(sheet) == "what_is_your_blocking_group_size"]<-"group_size"
-names(sheet)[names(sheet)=="what_is_your_blocking_group_name_all_lowercase_with_no_spaces"]<- "group_name"
-names(sheet)[names(sheet)=="what_is_your_blocking_group_leaders_name_first_and_last_ex_john_doe"]<- "group_leader"
-names(sheet)[names(sheet)=="are_you_blocking_with_any_of_your_suitemates"]<- "suitemates"
-names(sheet)[names(sheet)=="what_house_were_you_placed_in"]<- "house"
-names(sheet)[names(sheet)=="if_you_are_linking_please_provide_the_first_and_last_name_of_one_person_from_your_linking_group"] <- "linking_group"
-names(sheet)[names(sheet)=="please_list_all_members_in_your_blocking_group_separated_by_commas_first_and_last_ex_john_doe_john_harvard"]<- "group_members"
-sheet
-```
-
-```{r assign_class}
-
-# takes the sheet of first_years
-# and assigns the correct class
-# to each variable. Variables like
-# 'religion' and 'ethnicity' are 
-# given numeric values. The numeric
-# values are defined later on (eg 
-# when ethnicity == 1, it means that
-# the ethnicity is White.)
-
-sheet <- sheet %>% 
-  mutate(first_name = as.character(first_name)) %>% 
-  mutate(last_name = as.character(last_name)) %>% 
-  mutate(freshman_dorm = as.character(freshman_dorm)) %>% 
-  mutate(entryway = as.character(entryway)) %>% 
-  mutate(sex = as.logical(sex)) %>% 
-  mutate(ethnicity = as.numeric(ethnicity)) %>% 
-  mutate(religion = as.character(religion)) %>% 
-  mutate(sexual_orientation = as.character(sexual_orientation)) %>%
-  mutate(international = as.logical(international)) %>%
-  mutate(country = as.character(country)) %>% 
-  mutate(varsity = as.logical(varsity)) %>%
-  mutate(sport = as.character(sport)) %>%
-  mutate(legacy = as.logical(legacy)) %>%
-  mutate(relative_house = as.character(relative_house)) %>%
-  mutate(financial_aid = as.logical(financial_aid)) %>%
-  mutate(suitemates = as.character(suitemates)) %>% 
-  mutate(group_size = as.numeric(group_size)) %>%
-  mutate(group_name = as.numeric(group_name)) %>%
-  mutate(group_leader = as.character(group_leader)) %>%
-  mutate(group_members = as.character(group_members)) %>%
-  mutate(linking_group = as.numeric(linking_group)) %>%
-  mutate(house = as.character(house))
-glimpse(sheet)
+sheet[nrow(sheet)+2,] <- NA
 ```
 
 
@@ -322,7 +263,7 @@ assign_houses <- function(sheet = sheet){
   # sheet has a house.
   
   assigned_all <- left_join(sheet, grouped, by = "group_name") %>% 
-  select(1:23, 46) %>%
+  select(1:18, 36) %>%
   rename_at(.vars = vars(ends_with(".x")),
             .funs = funs(sub("[.]x$", "", .))) %>%
   mutate(house = random_house) %>%
@@ -387,6 +328,53 @@ overview <- function(assigned, community){
   # house assignment replicates). 
   
   tibble(
+    ethnicity = tibble(
+      prop_white = count(filter(community$ethnicity == 1))/nrow(community),
+      prop_asian = count(filter(community$ethnicity == 2))/nrow(community),
+      prop_black = count(filter(community$ethnicity == 3))/nrow(community),
+      prop_hisp = count(filter(community$ethnicity == 4))/nrow(community),
+      prop_mideast = count(filter(community$ethnicity == 5))/nrow(community),
+      prop_natam = count(filter(community$ethnicity == 6))/nrow(community),
+      prop_prefnot = count(filter(community$ethnicity == 7))/nrow(community),
+      prop_other = count(filter(community$ethnicity == 8))/nrow(community)
+    ),
+    
+    religion = tibble(
+      prop_agnostic = count(filter(community$religion == 1))/nrow(community),
+      prop_christian = count(filter(community$religion == 2))/nrow(community),
+      prop_atheist = count(filter(community$religion == 3))/nrow(community),
+      prop_jewish = count(filter(community$religion == 4))/nrow(community),
+      prop_hind = count(filter(community$religion == 5))/nrow(community),
+      prop_muslim = count(filter(community$religion == 6))/nrow(community),
+      prop_prefnot = count(filter(community$religion == 7))/nrow(community),
+      prop_other = count(filter(community$religion == 8))/nrow(community)
+    ),
+    
+    sexual_orientation = tibble(
+      prop_hetero = count(filter(community$sexual_orientation == 1))/nrow(community),
+      prop_homo = count(filter(community$sexual_orientation == 2))/nrow(community),
+      prop_bi = count(filter(community$sexual_orientation == 3))/nrow(community),
+      prop_as = count(filter(community$sexual_orientation == 4))/nrow(community),
+      prop_prefnot = count(filter(community$sexual_orientation == 5))/nrow(community),
+      prop_other = count(filter(community$sexual_orientation == 6))/nrow(community)
+    ),
+    
+    suitemates = tibble(
+      prop_yes = count(filter(community$suitemates == 1))/nrow(community),
+      prop_no = count(filter(community$suitemates == 0))/nrow(community)
+    ),
+    
+    group_size = tibble(
+      prop_1 = count(filter(community$group_size == 1))/nrow(community),
+      prop_2 = count(filter(community$group_size == 2))/nrow(community),
+      prop_3 = count(filter(community$group_size == 3))/nrow(community),
+      prop_4 = count(filter(community$group_size == 4))/nrow(community),
+      prop_5 = count(filter(community$group_size == 5))/nrow(community),
+      prop_6 = count(filter(community$group_size == 6))/nrow(community),
+      prop_7 = count(filter(community$group_size == 7))/nrow(community),
+      prop_8 = count(filter(community$group_size == 8))/nrow(community)
+    ),
+    
     prop_sex = mean(community$sex),
     prop_international = mean(community$international),
     prop_varsity = mean(community$varsity),
@@ -548,7 +536,7 @@ ci_quad
 # saveRDS(object = river_east, file = "shiny_app/updated_fake_data.RDS")
 # saveRDS(object = river_west, file = "shiny_app/updated_fake_data.RDS")
 
-saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
+# saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 ```
 
 

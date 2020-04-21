@@ -255,102 +255,150 @@ num_winthrop <- round((263+357+364+376+425+386+322+407+399+365+465+398) / total_
 
 
 ```{r assign_houses}
-
 # assign houses
 
-# takes in sheet and assigns houses randomly
-
+# creates a new dataframe that groups
+# every blocking group together and then
+# takes only the first person in the block.
 assign_houses <- function(sheet = sheet){
   grouped <- sheet %>% 
     mutate(random_house = "") %>% 
     group_by(group_name) %>% 
     slice(1)
   
-  rows <- sample(nrow(grouped))
-  grouped <- grouped[rows, ]
   
-  count <- 0
-  for (row in 1:nrow(grouped)) {
-      if((count + grouped[row,"group_size"] )<= num_adams) {
-          grouped[row,"random_house"]<- "Adams"
-          count <- count+ grouped[row,"group_size"]
-      }
-        
-      else if(num_adams < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_cabot) {
-          grouped[row,"random_house"]<- "Cabot"
-          count <- count+ grouped[row,"group_size"]
-      }
+}
+grouped <- sheet %>% 
+  mutate(random_house = "") %>%
+  group_by(group_name) %>%
+  slice(1) 
+
+# shuffle blocking groups so there
+# is no bias in group assignment (e.g. 
+# not all floaters are assigned to 
+# adams).
+rows <- sample(nrow(grouped))
+grouped <- grouped[rows, ]
+
+count <- 0
+for (row in 1:nrow(grouped)) {
+    if((count + grouped[row,"group_size"] )<= num_adams) {
+        grouped[row,"random_house"]<- "Adams"
+        count <- count+ grouped[row,"group_size"]
+    }
       
-      else if (num_cabot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_currier){ grouped[row,"random_house"]<- "Currier"
-           count <- count+ grouped[row,"group_size"]}
+    else if(num_adams < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_cabot) {
+        grouped[row,"random_house"]<- "Cabot"
+        count <- count+ grouped[row,"group_size"]
+    }
+    
+    else if (num_cabot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_currier){ grouped[row,"random_house"]<- "Currier"
+         count <- count+ grouped[row,"group_size"]}
+
+    else if (num_currier < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_dunster){ grouped[row,"random_house"]<- "Dunster"
+         count <- count+ grouped[row,"group_size"]}
   
-      else if (num_currier < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_dunster){ grouped[row,"random_house"]<- "Dunster"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_dunster < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_eliot){ grouped[row,"random_house"]<- "Eliot"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_eliot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_kirkland){ grouped[row,"random_house"]<- "Kirkland"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_kirkland < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_leverett){ grouped[row,"random_house"]<- "Leverett"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_leverett < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_lowell){ grouped[row,"random_house"]<- "Lowell"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_lowell < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_mather){ grouped[row,"random_house"]<- "Mather"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_mather < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_pfoho){ grouped[row,"random_house"]<- "Pfoho"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else if (num_pfoho < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_quincy){ grouped[row,"random_house"]<- "Quincy"
-           count <- count+ grouped[row,"group_size"]}
-    
-      else {grouped[row,"random_house"]<- "Winthrop"}
-  }
-    
-  assigned_all <- left_join(sheet, grouped, by = "group_name") %>% 
+    else if (num_dunster < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_eliot){ grouped[row,"random_house"]<- "Eliot"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (num_eliot < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_kirkland){ grouped[row,"random_house"]<- "Kirkland"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (num_kirkland < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_leverett){ grouped[row,"random_house"]<- "Leverett"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (num_leverett < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_lowell){ grouped[row,"random_house"]<- "Lowell"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (num_lowell < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_mather){ grouped[row,"random_house"]<- "Mather"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (num_mather < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_pfoho){ grouped[row,"random_house"]<- "Pfoho"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else if (num_pfoho < (count + grouped[row,"group_size"] ) & (count + grouped[row,"group_size"] ) <= num_quincy){ grouped[row,"random_house"]<- "Quincy"
+         count <- count+ grouped[row,"group_size"]}
+  
+    else {grouped[row,"random_house"]<- "Winthrop"}
+}
+
+# use join to assign house to other members in the group as well
+
+assigned_all <- left_join(sheet, grouped, by = "group_name") %>% 
   select(1:23, 46) %>%
   rename_at(.vars = vars(ends_with(".x")),
             .funs = funs(sub("[.]x$", "", .))) %>%
   mutate(house = random_house) %>%
   select(-random_house)
+
+```
+
+```{r create_houses_and_yards}
+
+# need to create houses using a function so we can rep many times 
+# over. Uses double arrow to create variables to the global 
+# environment (in contrast to the local environment of the function)
+
+# filters the assigned data to 
+# populate houses and yards
+create_communities <- function(){
   
-  assigned_all
+  adams <<- assigned_all %>% 
+  filter(house == "Adams")
+
+  cabot <<- assigned_all %>% 
+    filter(house == "Cabot")
+  
+  currier <<- assigned_all %>% 
+    filter(house == "Currier")
+  
+  dunster <<- assigned_all %>% 
+    filter(house == "Dunster")
+  
+  eliot <<- assigned_all %>% 
+    filter(house == "Eliot")
+  
+  kirkland <<- assigned_all %>% 
+    filter(house == "Kirkland")
+  
+  leverett <<- assigned_all %>% 
+    filter(house == "Leverett")
+  
+  lowell <<- assigned_all %>% 
+    filter(house == "Lowell")
+  
+  mather <<- assigned_all %>% 
+    filter(house == "Mather")
+  
+  pfoho <<- assigned_all %>% 
+    filter(house == "Pfoho")
+  
+  quincy <<- assigned_all %>% 
+    filter(house == "Quincy")
+  
+  winthrop <<- assigned_all %>% 
+    filter(house == "Winthrop")
+  
+  square <<- assigned_all %>% 
+    filter(house == "Lowell" | house == "Quincy" | house == "Adams")
+  
+  river_east <<- assigned_all %>% 
+    filter(house == "Leverett" | house == "Dunster" | house == "Mather")
+  
+  river_west <<- assigned_all %>% 
+    filter(house == "Eliot" | house == "Winthrop" | house == "Kirkland")
+  
+  quad <<- assigned_all %>% 
+    filter(house == "Currier" | house == "Pfoho" | house == "Cabot")
 }
+
+create_communities()
+
 ```
 
 ```{r}
 
-overview <- function(assigned, community){
-    
-  if(community == "river_central"){
-    community <- assigned %>%
-    filter(house == "Lowell" | house == "Quincy" | house == "Adams")
-  }
-
-  else if(community == "river_east"){
-    community <- assigned %>%
-      filter(house == "Leverett" | house == "Dunster" | house == "Mather")
-  }
-
-  else if(community == "river_west"){
-    community <- assigned %>%
-      filter(house == "Eliot" | house == "Winthrop" | house == "Kirkland")
-  }
-
-  else if(community == "quad"){
-    community <- assigned %>%
-      filter(house == "Pfoho" | house == "Cabot" | house == "Currier")
-  }
-
-  else{
-    community <- assigned %>%
-    filter(house == community)
-  }
-  
+overview <- function(community = assigned_all){
   
   tibble(
     prop_sex = mean(community$sex),
@@ -376,82 +424,36 @@ overview <- function(assigned, community){
   
 }
 
-# overview()
-# overview(river_central)
-# overview(river_east)
-# overview(river_west)
-# overview(quad)
+overview()
+overview(square)
+overview(river_east)
+overview(river_west)
+overview(quad)
 
 
 ```
 
 ```{r}
 
-all_communities <- sheet %>% 
-  rep_sample_n(size = nrow(sheet), replace = FALSE, reps = 2) %>% 
-  group_by(replicate)  %>% 
+multiple_houses <- sheet %>% 
+  rep_sample_n(size = nrow(sheet), replace = FALSE, reps = 3) %>% 
+  group_by(replicate) %>% 
   
-  # break here and assign [1] houses to every single person using map.
-  # then assign [2] community using map
+  # break here and assign houses to every single person using map.
+  # then assign community using map
   # then select replicate, community, group_by replicate and summarize all the summary statistics.
   
   # before I can continue, I have to go back and generalize the 
   # house and community assignment functions
+  
   nest() %>% 
-  mutate(assigned = map(data,~assign_houses(sheet = .))) %>% 
-  mutate(river_central = map(assigned, ~overview(assigned = ., community = 'river_central'))) %>% 
-  mutate(river_east = map(assigned, ~overview(assigned = ., community = 'river_east'))) %>% 
-  mutate(river_west = map(assigned, ~overview(assigned = ., community = 'river_west'))) %>% 
-  mutate(river_central = map(assigned, ~overview(assigned = ., community = 'river_central'))) %>% 
-  mutate(currier = map(assigned, ~overview(assigned = ., community = 'Currier'))) %>% 
-  mutate(cabot = map(assigned, ~overview(assigned = ., community = 'Cabot'))) %>% 
-  mutate(pfoho = map(assigned, ~overview(assigned = ., community = 'Pfoho'))) 
+  mutate(data=data())
 
 
-```
-
-```{r}
-
-neighborhoods <- all_communities %>% 
-  select(replicate, river_central, currier, cabot, pfoho) %>% 
-  unnest(river_central)
-# adams_tibbles <- all_communities %>% 
-#   select(replicate, adams_data) %>% 
-#   unnest(adams_data) 
-# 
-# prop_adams_athlete <- adams_tibbles %>% 
-#   ungroup() %>%
-#   summarize(mean = mean(prop_varsity))
-
-
-
-
-
+multiple_houses
 ```
 
 
-```{r}
-
-all_communities %>% 
-  filter(first_name == "Austin", last_name == "Li") %>% 
-  select(group_name, house)
-
-```
-
-
-```{r}
-
-all_communities <- tibble(
-  replicate = c(1,2,3),
-  data = tibble(c(1,2,3)),
-  assigned = tibble(c(1,2,3)),
-  overview_adams = tibble(c(1,2,3))
-
-)
-
-all_communities
-
-```
 
 
 ```{r saveRDS}
@@ -459,6 +461,13 @@ saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 ```
 
 
+Problems/Questions:
+- Group_id #180 is skipped.
+- Given that the fake dataset is
+1639 values long, will all the code be 
+generalizable if we don't get 1639 responses?
+- need data to assess if certain identities block together 
+- do this multiple times and create confidence intervals
 
 
 
