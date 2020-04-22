@@ -1,0 +1,382 @@
+---
+title: "functions"
+author: "Jamal Nimer"
+date: "4/21/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(reprex)
+library(janitor)
+library(gt)
+library(haven)
+library(shiny)
+library(infer)
+library(dplyr)
+library(googlesheets4)
+```
+
+```{r prop_function, echo=F}
+
+# determining proportions
+# general prop function
+
+prop <- function(list1,list2) {
+  length(list1)/length(list2)
+}
+```
+
+
+```{r ethnicity, echo=F}
+
+# ethnicity
+# selecting rows into a list
+
+ethnicity <- function(community) {
+  w <- which(grepl("White", community$ethnicity))
+  a <- which(grepl("Asian", community$ethnicity))
+  b <- which(grepl("Black", community$ethnicity))
+  hl <- which(grepl("Hispanic/Latinx", community$ethnicity))
+  mena <- which(grepl("Middle Eastern/North African", community$ethnicity))
+  indna <- which(grepl("Indigenous/Native American", community$ethnicity))
+  eth_pref <- which(grepl("Prefer not to say", community$ethnicity))
+  total_ethnicity = c(w, a, b, hl, mena, indna, eth_pref)
+  
+  prop_ethnicity_tibble <- tibble(
+  prop_white = prop(w, total_ethnicity),
+  prop_asian = prop(a, total_ethnicity),
+  prop_black = prop(b, total_ethnicity),
+  prop_hl = prop(hl, total_ethnicity),
+  prop_mena = prop(mena, total_ethnicity),
+  prop_indna = prop(indna, total_ethnicity),
+  prop_eth_pref = prop(eth_pref, total_ethnicity)
+  )
+  
+  prop_ethnicity_tibble
+}
+```
+
+```{r religion, echo=F}
+
+# religion
+
+religion <- function(community) {
+  christ <- which(grepl("Christian", community$religion))
+  hindu <- which(grepl("Hindu", community$religion))
+  muslim <- which(grepl("Muslim", community$religion))
+  jewish <- which(grepl("Jewish", community$religion))
+  agnos <- which(grepl("Agnostic", community$religion))
+  athiest <- which(grepl("Athiest", community$religion))
+  relig_pref <- which(grepl("Prefer not to say", community$religion))
+
+# total religions reported
+  
+  total_relig = c(christ, hindu, muslim, jewish, agnos, athiest, relig_pref)
+
+# religion proportions table
+  prop_relig_table <- tibble(
+    prop_christ = prop(christ, total_relig),
+    prop_hindu = prop(hindu, total_relig),
+    prop_muslim = prop(muslim, total_relig),
+    prop_jewish = prop(jewish, total_relig),
+    prop_agnos = prop(agnos, total_relig),
+    prop_athiest = prop(athiest, total_relig),
+    prop_relig_pref = prop(relig_pref, total_relig)
+  )
+
+  prop_relig_table
+}
+```
+
+```{r sex_or, echo=F}
+
+# sexual orientation
+
+sexual_orientation <- function(community) {
+  hetero <- which(grepl("Heterosexual", community$sexual_orientation))
+  homo <- which(grepl("Homosexual", community$sexual_orientation))
+  bi <- which(grepl("Bisexual", community$sexual_orientation))
+  as <- which(grepl("Asexual", community$sexual_orientation))
+  sex_pref <- which(grepl("Prefer not to say", community$sexual_orientation))
+
+# total sexual orientations reported
+
+  total_sex <- c(hetero, homo, bi, as, sex_pref)
+
+# sexual orientation proportions table
+
+  prop_sex_tibble <- tibble(
+    prop_hetero = prop(hetero, total_sex),
+    prop_homo = prop(homo, total_sex),
+    prop_bi = prop(bi, total_sex),
+    prop_as = prop(as, total_sex),
+    prop_sex_pref = prop(sex_pref, total_sex)
+  )
+
+  prop_sex_tibble
+}
+
+```
+
+```{r reason_suitemates, echo=F}
+
+# reason for blocking with suitemates
+
+suitemates_reasons <- function(community) {
+  sleep <- which(grepl("Similar sleeping schedules", community$reason_suitemates))
+  aca_int <- which(grepl("Common academic interests", community$reason_suitemates))
+  hobbies <- which(grepl("Common hobbies", community$reason_suitemates))
+  friends <- which(grepl("Similar friend groups", community$reason_suitemates))
+  music <- which(grepl("Same taste for music", community$reason_suitemates))
+  religion <- which(grepl("Same religion", community$reason_suitemates))
+
+# total suite_reasons reported
+
+  total_suite_reasons <- c(sleep, aca_int, hobbies, friends, music, religion)
+
+# blocking with suitemates reason proportions table
+
+  prop_suite_reason_tibble <- tibble(
+    prop_sleep = prop(sleep, total_suite_reasons),
+    prop_aca_int = prop(aca_int, total_suite_reasons),
+    prop_hobbies = prop(hobbies, total_suite_reasons),
+    prop_friends = prop(friends, total_suite_reasons),
+    prop_music = prop(music, total_suite_reasons),
+    prop_reigion = prop(religion, total_suite_reasons)
+  )
+
+  prop_suite_reason_tibble
+}
+
+```
+
+```{r group_size, echo=F}
+
+group_size <- function(community) {
+  one <- which(grepl(1, community$group_size))
+  two <- which(grepl(2, community$group_size))
+  three <- which(grepl(3, community$group_size))
+  four <- which(grepl(4, community$group_size))
+  five <- which(grepl(5, community$group_size))
+  six <- which(grepl(6, community$group_size))
+  seven <- which(grepl(7, community$group_size))
+  eight <- which(grepl(8, community$group_size))
+
+# total sizes reported
+
+  total_sizes <- c(one, two, three, four, five, six, seven, eight)
+
+# group size proportions table
+
+  distr_group_size_tibble <- tibble(
+    prop_one = prop(one, total_sizes),
+    prop_two = prop(two, total_sizes),
+    prop_three = prop(three, total_sizes),
+    prop_four = prop(four, total_sizes),
+    prop_five = prop(five, total_sizes),
+    prop_six = prop(six, total_sizes),
+    prop_seven = prop(seven, total_sizes),
+    prop_eight = prop(eight, total_sizes)
+  )
+  
+  distr_group_size_tibble
+}
+```
+
+```{r overview_function}
+
+# generates summary statistics for any identifiable community. 
+# It takes in a sheet of assigned houses and then also takes
+# in a community within the assigned sheet that you would like
+# to filter for. It takes in assigned as a variable because 
+# later we use a map function to pass in a unique set of assigned
+# houses.
+#
+# summary statistics are returned in the form of a tibble
+
+overview <- function(assigned, community){
+    
+  if(community == "river_central"){
+    community <- assigned %>%
+    filter(house == "Lowell" | house == "Quincy" | house == "Adams")
+  }
+
+  else if(community == "river_east"){
+    community <- assigned %>%
+      filter(house == "Leverett" | house == "Dunster" | house == "Mather")
+  }
+
+  else if(community == "river_west"){
+    community <- assigned %>%
+      filter(house == "Eliot" | house == "Winthrop" | house == "Kirkland")
+  }
+  
+  else if(community == "river"){
+    community <- assigned %>%
+    filter(house == "Lowell" | house == "Quincy" | house == "Adams" | house == "Leverett" | house == "Dunster" | house == "Mather" | house == "Eliot" | house == "Winthrop" | house == "Kirkland")
+  }
+
+  else if(community == "quad"){
+    community <- assigned %>%
+      filter(house == "Pforzheimer" | house == "Cabot" | house == "Currier")
+  }
+
+  else{
+    community <- assigned %>%
+    filter(house == community)
+  }
+  
+  # the method in which summary statistics are generated still needs to
+  # be modified. Considering making a tibble for all categorical variables
+  # like ethnicity or religion. This might be complicated because when we 
+  # use this function within a map on an already existing tibble, we will have
+  # a tibble (the tibble of ethnicity/religion distribution) within a tibble 
+  # (the tibble of summary statistics) within a tibble (the tibble of random 
+  # house assignment replicates). 
+  
+  tibble(
+    prop_international = mean(community$international, na.rm = TRUE),
+    prop_varsity = mean(community$varsity, na.rm = TRUE),
+    prop_legacy = mean(community$legacy, na.rm = TRUE),
+    prop_financial_aid = mean(community$financial_aid, na.rm = TRUE),
+    prop_suitemates = mean(community$suitemates, na.rm = TRUE),
+    prop_approval = mean(community$approval, na.rm = TRUE),
+    prop_group_size = mean(community$group_size, na.rm = TRUE),
+  
+    prop_ethnicity = as.tibble(ethnicity(community)) %>% nest(data = everything()),
+    prop_religion = as.tibble(religion(community)) %>% nest(data = everything()),
+    prop_sexual_orientation = as.tibble(sexual_orientation(community)) %>% nest(data = everything()),
+    distr_group_size = as.tibble(group_size(community)) %>% nest(data = everything()),
+    prop_suitemates_reasons = as.tibble(suitemates_reasons(community)) %>% nest(data = everything()),
+  )
+  
+}
+```
+
+```{r calculate_house_size}
+# assigns the appropriate size to each house which is used
+# later to cap the number of people allowed in each house
+# during random assignments. The values are cumulative because
+# it allows the for loop to run smoother in the house assignment
+# function
+
+num_adams <- 95
+num_cabot <- 224
+num_currier <- 356
+num_dunster <- 492
+num_eliot <- 646
+num_kirkland <- 786
+num_leverett <- 903
+num_lowell <- 1050
+num_mather <- 1194
+num_pfoho <- 1327
+num_quincy <- 1495
+num_winthrop <- 1637
+```
+
+
+```{r assign_houses}
+
+# assign houses
+
+# takes in official_housing and assigns houses randomly. For people 
+# who do not have a blocking group size reported, we assign the size
+# 1. We do this in a fake group_size column because otherwise it would
+# affect the size of the real group.
+
+assign_houses <- function(official_housing = official_housing){
+  grouped <- official_housing %>% 
+    mutate(random_house = "") %>% 
+    mutate(fake_group_size = ifelse(!is.na(group_size),group_size,1)) %>% 
+    group_by(group_name) %>% 
+    slice(1)
+  
+  count <- 0
+  for (row in 1:nrow(grouped)) {
+      if((count + grouped[row,"fake_group_size"] )<= num_adams) {
+          grouped[row,"random_house"]<- "Adams"
+          count <- count+ grouped[row,"fake_group_size"]
+      }
+        
+      else if(num_adams < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_cabot) {
+          grouped[row,"random_house"]<- "Cabot"
+          count <- count+ grouped[row,"fake_group_size"]
+      }
+      
+      else if (num_cabot < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_currier){ grouped[row,"random_house"]<- "Currier"
+           count <- count+ grouped[row,"fake_group_size"]}
+  
+      else if (num_currier < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_dunster){ grouped[row,"random_house"]<- "Dunster"
+           count <- count+ grouped[row,"fake_group_size"]}
+    
+      else if (num_dunster < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_eliot){ grouped[row,"random_house"]<- "Eliot"
+           count <- count+ grouped[row,"fake_group_size"]}
+    
+      else if (num_eliot < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_kirkland){ grouped[row,"random_house"]<- "Kirkland"
+           count <- count+ grouped[row,"fake_group_size"]}
+    
+      else if (num_kirkland < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_leverett){ grouped[row,"random_house"]<- "Leverett"
+           count <- count+ grouped[row,"fake_group_size"]}
+    
+      else if (num_leverett < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_lowell){ grouped[row,"random_house"]<- "Lowell"
+           count <- count+ grouped[row,"fake_group_size"]}
+    
+      else if (num_lowell < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_mather){ grouped[row,"random_house"]<- "Mather"
+           count <- count+ grouped[row,"fake_group_size"]}
+    
+      else if (num_mather < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_pfoho){ grouped[row,"random_house"]<- "Pfoho"
+           count <- count+ grouped[row,"fake_group_size"]}
+    
+      else if (num_pfoho < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_quincy){ grouped[row,"random_house"]<- "Quincy"
+           count <- count+ grouped[row,"fake_group_size"]}
+    
+      else {grouped[row,"random_house"]<- "Winthrop"}
+  }
+    
+  assigned_all <- left_join(official_housing, grouped, by = "group_name") %>% 
+  select(1:20, 40) %>%
+  rename_at(.vars = vars(ends_with(".x")),
+            .funs = funs(sub("[.]x$", "", .))) %>%
+  mutate(house = random_house) 
+  # %>%
+  # select(-random_house, -fake_group_size)
+  
+  assigned_all
+}
+```
+
+```{r confidence_interval}
+
+
+# function to caluculate confidence intervals 
+# that takes in the lower percentile and the
+# upper percentile. A community must be passed
+# in that has already had overview() called on it.
+confidence_interval <- function(community, lower_percentile = 0.025, median = 0.5, upper_percentile = 0.975){
+  percentiles <- tibble(
+    percentile = c(lower_percentile, median, upper_percentile),
+    
+    prop_international = quantile(community %>% ungroup() %>% pull(prop_international), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_varsity = quantile(community %>% ungroup() %>% pull(prop_varsity), 
+                            c(lower_percentile, median, upper_percentile)),
+    
+    prop_legacy = quantile(community %>% ungroup() %>% pull(prop_legacy), 
+                           c(lower_percentile, median, upper_percentile)),
+    
+    prop_financial_aid = quantile(community %>% ungroup() %>% pull(prop_financial_aid), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_group_size = quantile(community %>% ungroup() %>% pull(prop_group_size), 
+                               c(lower_percentile, median, upper_percentile))
+  )
+  percentiles
+}
+
+
+```
