@@ -295,6 +295,9 @@ assign_houses <- function(official_housing = official_housing){
     group_by(group_name) %>% 
     slice(1)
   
+  rows <- sample(nrow(grouped))
+  grouped <- grouped[rows, ]
+  
   count <- 0
   for (row in 1:nrow(grouped)) {
       if((count + grouped[row,"fake_group_size"] )<= num_adams) {
