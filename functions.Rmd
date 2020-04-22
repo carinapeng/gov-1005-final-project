@@ -264,17 +264,17 @@ overview <- function(assigned, community){
 # it allows the for loop to run smoother in the house assignment
 # function
 
-num_adams <- 95
-num_cabot <- 224
-num_currier <- 356
-num_dunster <- 492
-num_eliot <- 646
-num_kirkland <- 786
-num_leverett <- 903
-num_lowell <- 1050
-num_mather <- 1194
-num_pfoho <- 1327
-num_quincy <- 1495
+num_adams <- 132
+num_cabot <- 258
+num_leverett <- 414
+num_dunster <- 543
+num_eliot <- 691
+num_kirkland <- 821
+num_currier <- 947
+num_lowell <- 1097
+num_mather <- 1221
+num_pfoho <- 1373
+num_quincy <- 1520
 num_winthrop <- 1637
 ```
 
@@ -282,21 +282,16 @@ num_winthrop <- 1637
 ```{r assign_houses}
 
 # assign houses
-
 # takes in official_housing and assigns houses randomly. For people 
 # who do not have a blocking group size reported, we assign the size
 # 1. We do this in a fake group_size column because otherwise it would
 # affect the size of the real group.
-
 assign_houses <- function(official_housing = official_housing){
   grouped <- official_housing %>% 
     mutate(random_house = "") %>% 
     mutate(fake_group_size = ifelse(!is.na(group_size),group_size,1)) %>% 
-    group_by(group_name) %>% 
+    group_by(group_leader) %>% 
     slice(1)
-  
-  rows <- sample(nrow(grouped))
-  grouped <- grouped[rows, ]
   
   count <- 0
   for (row in 1:nrow(grouped)) {
@@ -310,10 +305,10 @@ assign_houses <- function(official_housing = official_housing){
           count <- count+ grouped[row,"fake_group_size"]
       }
       
-      else if (num_cabot < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_currier){ grouped[row,"random_house"]<- "Currier"
+      else if (num_cabot < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_leverett){ grouped[row,"random_house"]<- "Leverett"
            count <- count+ grouped[row,"fake_group_size"]}
   
-      else if (num_currier < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_dunster){ grouped[row,"random_house"]<- "Dunster"
+      else if (num_leverett < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_dunster){ grouped[row,"random_house"]<- "Dunster"
            count <- count+ grouped[row,"fake_group_size"]}
     
       else if (num_dunster < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_eliot){ grouped[row,"random_house"]<- "Eliot"
@@ -322,10 +317,11 @@ assign_houses <- function(official_housing = official_housing){
       else if (num_eliot < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_kirkland){ grouped[row,"random_house"]<- "Kirkland"
            count <- count+ grouped[row,"fake_group_size"]}
     
-      else if (num_kirkland < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_leverett){ grouped[row,"random_house"]<- "Leverett"
+      else if (num_kirkland < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_currier){ grouped[row,"random_house"]<-
+        "Currier"
            count <- count+ grouped[row,"fake_group_size"]}
     
-      else if (num_leverett < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_lowell){ grouped[row,"random_house"]<- "Lowell"
+      else if (num_currier < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_lowell){ grouped[row,"random_house"]<- "Lowell"
            count <- count+ grouped[row,"fake_group_size"]}
     
       else if (num_lowell < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_mather){ grouped[row,"random_house"]<- "Mather"
