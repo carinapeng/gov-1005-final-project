@@ -44,7 +44,6 @@ base_eliot <- base_data %>% select(eliot) %>% unnest(eliot)
 base_kirkland <- base_data %>% select(kirkland) %>% unnest(kirkland)
 base_winthrop <- base_data %>% select(winthrop) %>% unnest(winthrop)
 
-
 #Confidence interval function
 
 confidence_interval <- function(community, lower_percentile = 0.025, median = 0.5, upper_percentile = 0.975){
