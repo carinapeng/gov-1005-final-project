@@ -1,0 +1,13 @@
+name: shiny_app
+title: shiny_app
+username:
+account: eliotdmin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2180065
+bundleId: 3060703
+url: https://eliotdmin.shinyapps.io/shiny_app/
+when: 1587749128.06975
+asMultiple: FALSE
+asStatic: FALSE
+ignoredFiles: base_data.RDS|base_quad.RDS|base_river_central.RDS|base_river_east.RDS|base_river_west.RDS|base_river.RDS|for_shiny.R|quad.RDS|river_central.RDS|river_east.RDS|river_west.RDS|river.RDS|updated_fake_data.RDS
