@@ -112,8 +112,10 @@ quad <- all_communities %>%
 
 ```{r analysis}
 
-river
-quad
+# river
+quad %>% 
+  pull(prop_sexual_orientation)
+quad$prop_ethnicity[[1]]
 
 # use a chisq.test(x = a numeric vector or matrix,
 #                  y = a vector, ignored if x is a matrix)
