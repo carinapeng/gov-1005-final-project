@@ -247,11 +247,11 @@ overview <- function(assigned, community){
     prop_approval = mean(community$approval, na.rm = TRUE),
     prop_group_size = mean(community$group_size, na.rm = TRUE),
   
-    prop_ethnicity = as.tibble(ethnicity(community)) %>% nest(data = everything()),
-    prop_religion = as.tibble(religion(community)) %>% nest(data = everything()),
-    prop_sexual_orientation = as.tibble(sexual_orientation(community)) %>% nest(data = everything()),
-    distr_group_size = as.tibble(group_size(community)) %>% nest(data = everything()),
-    prop_suitemates_reasons = as.tibble(suitemates_reasons(community)) %>% nest(data = everything()),
+    prop_ethnicity = as.tibble(ethnicity(community)),
+    prop_religion = as.tibble(religion(community)),
+    prop_sexual_orientation = as.tibble(sexual_orientation(community)),
+    distr_group_size = as.tibble(group_size(community)),
+    prop_suitemates_reasons = as.tibble(suitemates_reasons(community)),
   )
   
 }
