@@ -123,7 +123,14 @@ quad
 
 
 ```{r saveRDS}
-# saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
+
+saveRDS(object = all_communities, file = "shiny_app/base_data.RDS")
+saveRDS(object = river_central, file = "shiny_app/base_river_central.RDS")
+saveRDS(object = river_east, file = "shiny_app/base_river_east.RDS")
+saveRDS(object = river_west, file = "shiny_app/base_river_west.RDS")
+saveRDS(object = river, file = "shiny_app/base_river.RDS")
+saveRDS(object = quad, file = "shiny_app/base_quad.RDS")
+
 ```
 
 

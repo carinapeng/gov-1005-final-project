@@ -37,7 +37,7 @@ all_communities <- official_housing %>%
   
   # 1) replicate the official_housing of freshmen and group_by each replicate
   
-  rep_sample_n(size = nrow(official_housing), replace = FALSE, reps = 10) %>% 
+  rep_sample_n(size = nrow(official_housing), replace = FALSE, reps = 500) %>% 
   group_by(replicate)  %>% 
   nest() %>% 
   
@@ -105,6 +105,7 @@ river <- all_communities %>%
 quad <- all_communities %>% 
   select(replicate, quad) %>% 
   unnest(quad)
+
 ```
 
 ```{r analysis}
@@ -119,6 +120,15 @@ ci_quad
 
 
 ```{r saveRDS}
+
+
+saveRDS(object = all_communities, file = "shiny_app/updated_fake_data.RDS")
+saveRDS(object = river, file = "shiny_app/river.RDS")
+saveRDS(object = quad, file = "shiny_app/quad.RDS")
+saveRDS(object = river_central, file = "shiny_app/river_central.RDS")
+saveRDS(object = river_east, file = "shiny_app/river_east.RDS")
+saveRDS(object = river_west, file = "shiny_app/river_west.RDS")
+
 # saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 ```
 

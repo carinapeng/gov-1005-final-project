@@ -1,82 +1,141 @@
+
 library(shiny)
 library(plotly)
 library(ggthemes)
 library(tidyverse)
+library(shinythemes)
+library(skimr)
+library(patchwork)
+library(cowplot)
 
 # must install plotly package
 
-data <- readRDS("updated_fake_data.RDS")
+full_data <- readRDS("updated_fake_data.RDS")
+full_data_pivoted <- full_data %>% select(-data, -assigned) %>%
+  pivot_longer(-replicate, names_to = "community", values_to = "demographics")
+quad <- readRDS("quad.RDS")
+river <- readRDS("river.RDS")
+river_west <- readRDS("river_west.RDS")
+river_east <- readRDS("river_east.RDS")
+river_central <- readRDS("river_central.RDS")
 
-#BREAKDOWN OF FROSH
+base_data <- readRDS("base_data.RDS") %>% ungroup()
+base_data_pivoted <- base_data %>% 
+  pivot_longer(-data, names_to = "community", values_to = "demographics")
 
-#Tibble that assigns a "yard" variable indicating the yard of the freshman house
-yards <- data %>%
-  mutate(yard = case_when(
-    freshman_dorm %in% (c("Canaday", "Thayer")) ~ "Oak",
-    freshman_dorm %in% (c("Grays", "Matthews", "Grays")) ~ "Elm",
-    freshman_dorm %in% (c("Apley", "Hollis", "Holworthy", "Lionel", "Massachusetts",
-                          "Mower", "Stoughton", "Straus")) ~ "Ivy",
-    TRUE ~ "Crimson"))
+base_quad <- readRDS("base_quad.RDS") %>% ungroup()
+base_river <- readRDS("base_river.RDS") %>% ungroup()
+base_river_west <- readRDS("base_river_west.RDS") %>% ungroup() 
+base_river_east <- readRDS("base_river_east.RDS") %>% ungroup()
+base_river_central <- readRDS("base_river_central.RDS") %>% ungroup()
 
-legacy_yards <- yards %>%
-  group_by(yard) %>%
-  summarize(legacies = sum(legacy))
+pfoho <- full_data %>% select(replicate, pfoho) %>% unnest(pfoho)
+currier <- full_data %>% select(replicate, currier) %>% unnest(currier)
+cabot <- full_data %>% select(replicate, cabot) %>% unnest(cabot)
+mather <- full_data %>% select(replicate, mather) %>% unnest(mather)
+dunster <- full_data %>% select(replicate, dunster) %>% unnest(dunster)
+leverett <- full_data %>% select(replicate, leverett) %>% unnest(leverett)
+quincy <- full_data %>% select(replicate, quincy) %>% unnest(quincy)
+adams <- full_data %>% select(replicate, adams) %>% unnest(adams)
+lowell <- full_data %>% select(replicate, lowell) %>% unnest(lowell)
+eliot <- full_data %>% select(replicate, eliot) %>% unnest(eliot)
+kirkland <- full_data %>% select(replicate, kirkland) %>% unnest(kirkland)
+winthrop <- full_data %>% select(replicate, winthrop) %>% unnest(winthrop)
 
-how_many_each_size <- data %>%
-  count(group_size) %>%
-  mutate(numberOfGroups = n/group_size)
+base_pfoho <- base_data %>% select(pforzheimer) %>% unnest(pforzheimer)
+base_currier <- base_data %>% select(currier) %>% unnest(currier)
+base_cabot <- base_data %>% select(cabot) %>% unnest(cabot)
+base_mather <- base_data %>% select(mather) %>% unnest(mather)
+base_dunster <- base_data %>% select(dunster) %>% unnest(dunster)
+base_leverett <- base_data %>% select(leverett) %>% unnest(leverett)
+base_quincy <- base_data %>% select(quincy) %>% unnest(quincy)
+base_adams <- base_data %>% select(adams) %>% unnest(adams)
+base_lowell <- base_data %>% select(lowell) %>% unnest(lowell)
+base_eliot <- base_data %>% select(eliot) %>% unnest(eliot)
+base_kirkland <- base_data %>% select(kirkland) %>% unnest(kirkland)
+base_winthrop <- base_data %>% select(winthrop) %>% unnest(winthrop)
 
-suitemates_per_house <- data %>%
-  group_by(freshman_dorm) %>%
-  summarize(meanSuitemates = mean(suitemates))
 
-#BREAKDOWN OF BLOCKING GROUPS
+#Confidence interval function
 
-legacies_per_block <- data %>%
-  group_by(group_name) %>%
-  summarize(legacies = sum(legacy))
-
-athletes_per_block <- data %>%
-  group_by(group_name) %>%
-  count(varsity) %>%
-  filter(varsity == TRUE)
-
- 
-ui <- navbarPage(
-  "Blocking Project",
-  tabPanel("Breakdown of the Freshman Class",
-           navlistPanel(
-             tabPanel("Freshmen by Dorm",
-                      plotlyOutput("froshByDorm")),
-             tabPanel("Freshmen by Yard",
-                          plotlyOutput("froshByYard")),
-             tabPanel("Legacy students per Yard",
-                      plotlyOutput("legaciesByYard")),
-             tabPanel("Religious Composition",
-                      plotlyOutput("religiousComposition")),
-             tabPanel("Sexual Orientation Distribution",
-                      plotlyOutput("sexualOrientation")),
-             tabPanel("Ethnicity Distribution",
-                      plotlyOutput("ethnicities")),
-             tabPanel("Average Suitemates per House",
-                      plotlyOutput("suitematesPerHouse")))),
-  tabPanel("Breakdown of Blocking Groups",
-           navlistPanel(
-             tabPanel("Distribution of Blocking Group Sizes",
-                      plotlyOutput("blockSizes")),
-             tabPanel("Legacy students per Blocking Group",
-                      plotlyOutput("legaciesByBlockingGroup")),
-             tabPanel("Varsity Students per Blocking Group",
-                      plotlyOutput("blockingVarsity")))),
+confidence_interval <- function(community, lower_percentile = 0.025, median = 0.5, upper_percentile = 0.975){
   
-    tabPanel("Discussion",
-             titlePanel("Conclusions from Fake Data"),
-             p("A huge wrench was thrown into our data collection with the coronavirus evacuation. We are currently working on acquiring data in spite of this disruption.
+  percentiles <- tibble(
+    percentile = c(lower_percentile, median, upper_percentile),
+    prop_international = quantile(community %>% ungroup() %>% pull(prop_international), c(lower_percentile, median, upper_percentile)),
+    prop_varsity = quantile(community %>% ungroup() %>% pull(prop_varsity), c(lower_percentile, median, upper_percentile)),
+    prop_legacy = quantile(community %>% ungroup() %>% pull(prop_legacy), c(lower_percentile, median, upper_percentile)),
+    prop_financial_aid = quantile(community %>% ungroup() %>% pull(prop_financial_aid), c(lower_percentile, median, upper_percentile)),
+    prop_group_size = quantile(community %>% ungroup() %>% pull(prop_group_size), c(lower_percentile, median, upper_percentile))   
+  )
+  percentiles
+}
+
+#LIMIT TO THE VARIABLES WE'RE CHOOSING TO DO
+
+confidence_interval_pivoted <- function(section, lower_percentile = 0.025, median = 0.5, upper_percentile = 0.975){
+  
+  selected <- full_data_pivoted %>% filter(community == section)
+  
+  percentiles <- tibble(
+    percentile = c(lower_percentile, median, upper_percentile),
+    
+    prop_international = quantile(selected %>% ungroup() %>% select(demographics) %>% unnest(demographics) %>% pull(prop_international),
+                                  c(lower_percentile, median, upper_percentile)),
+    prop_varsity = quantile(selected %>% ungroup() %>% select(demographics) %>% unnest(demographics) %>% pull(prop_varsity),
+                            c(lower_percentile, median, upper_percentile)),   
+    prop_legacy = quantile(selected %>% ungroup() %>% select(demographics) %>% unnest(demographics) %>% pull(prop_legacy),
+                           c(lower_percentile, median, upper_percentile)),
+    prop_financial_aid = quantile(selected %>% ungroup() %>% select(demographics) %>% unnest(demographics) %>% pull(prop_financial_aid),
+                                  c(lower_percentile, median, upper_percentile)),
+    prop_group_size = quantile(selected %>% ungroup() %>% select(demographics) %>% unnest(demographics) %>% pull(prop_group_size),
+                               c(lower_percentile, median, upper_percentile))
+  )
+  
+  percentiles
+  
+}
+
+ui <- navbarPage(theme = shinytheme("darkly"),
+                 "Blocking Project",
+                 tabPanel("Comparisons",
+                          navlistPanel(
+                            tabPanel("Comparisons Across Neighborhoods",
+                                     selectInput("neighborhood_1", 
+                                                 label = "Graph 1",
+                                                 choices = c("River West" = "river_west",
+                                                             "River Central" = "river_central",
+                                                             "River East" = "river_east",
+                                                             "River" = "river",
+                                                             "Quad" = "quad"),
+                                                 selected = "river_east",
+                                     ),
+                                     selectInput("neighborhood_2",
+                                                 label = "Graph 2",
+                                                 choices = c("River West" = "river_west",
+                                                             "River Central" = "river_central",
+                                                             "River East" = "river_east",
+                                                             "River" = "river",
+                                                             "Quad" = "quad")),
+                                     selectInput("variable", 
+                                                 label = "Variable Displayed",
+                                                 choices = c("International" = "prop_international",
+                                                             "Varsity" = "prop_varsity",
+                                                             "Legacy" = "prop_legacy",
+                                                             "Financial Aid" = "prop_financial_aid",
+                                                             "Blocking Group Size" = "prop_group_size")),
+                                     mainPanel(
+                                       plotOutput("graphsTogether")
+                                     )))),
+                 tabPanel("Comparisons Across Houses"),
+                 tabPanel("Discussion",
+                          titlePanel("Conclusions from Fake Data"),
+                          p("A huge wrench was thrown into our data collection with the coronavirus evacuation. We are currently working on acquiring data in spite of this disruption.
                We inputted model data into the survey we made to get preliminary graphs. More detailed work will follow with actual data collection and analysis.")),
-    tabPanel("About", 
-             titlePanel("About"),
-             h3("Project Background and Motivations"),
-             p("*Update* Our project has been compromised due to the Coronavirus outbreak and the resulting postponement of housing day. We are working to develop our algorithms for analyzing the data and will work with fake data for now.
+                 tabPanel("About", 
+                          titlePanel("About"),
+                          h3("Project Background and Motivations"),
+                          p("*Update* Our project has been compromised due to the Coronavirus outbreak and the resulting postponement of housing day. We are working to develop our algorithms for analyzing the data and will work with fake data for now.
              The Harvard College houses is one of the most thrilling and dramatic days of the school year, and we wanted to wield data as a tool for tackling some of the myths and stereotypes about housing day.
                This project aims to continue the work of the previous blocking group project with more rigorous data analytics and statistical computation, more intuitive graph design, and additional questions (including sexual orientation). It will hopefully build on the previous analysis attempting to find any discrepancies.
               
@@ -84,136 +143,162 @@ ui <- navbarPage(
 The project will attempt to replicate a truly random housing lottery to assess if Harvard’s housing appears to be random as well. The project will check variables such as legacy, race, religion, athletics, sex, freshman dorm, financial aid, international students, and blocking group size.
 
 All Sensitive questions have a “prefer not to answer” option."),
-             h3("About Us"),
-             p("We are a group of nine students who sought to continue the work of GOV 1005 students from last year. We are
+                          h3("About Us"),
+                          p("We are a group of nine students who sought to continue the work of GOV 1005 students from last year. We are
              Jamal Nimer, Carina Peng, Ilyas Mardin, Shojeh Liu, Eliot Min, Lucy He, Angie Shin, Austin Li, and Sam Saba.
                ")))
 
 
 server <- function(input, output) {
   
-  #Graphs for breakdown of freshman class
-  
-  output$froshByDorm <- renderPlotly(
-    ggplotly(
-      ggplot(yards, aes(x = freshman_dorm))  +
-        geom_bar(position = "dodge") +
-        labs(x = "Freshman Dorm",
-             y = "Number of Students") + 
-        coord_flip() + 
-        theme_classic()
-      
-    ))
-  
-  output$froshByYard <- renderPlotly(
-    ggplotly(
-     ggplot(yards, aes(x = yard))  +
-        geom_bar(position = "dodge") +
-      labs(x = "Freshman Yard",
-           y = "Number of Students") + 
-    theme_classic()
-      ))
-  
-  
-  output$legaciesByYard <- renderPlotly(
-    ggplotly(
-      ggplot(legacy_yards, aes(x = yard, y = legacies)) +
-        geom_col() + 
-        labs(x = "Legacy Students per Yard",
-             y = "Number of Students") + 
-        theme_classic()
-    ))
-  
-  output$religiousComposition <-renderPlotly(
-    ggplotly(
-      ggplot(data, aes(x = religion)) + 
-        geom_histogram(binwidth = .5, position = "dodge") + 
-        scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8), 
-                           labels = c("Agnostic", "Christian", "Atheist", "Jewish",
-                                      "Hindu", "Muslim", "Prefer not to say",
-                                      "Other")) + 
-        labs(x = "Religion",
-             y = "Number of Students") + 
-        coord_flip() + 
-        theme_classic()
+  output$graphsTogether <- renderPlot({
+    
+    xscale <- case_when(
+      input$variable == "prop_international" ~ c(.01, .04),
+      input$variable == "prop_varsity" ~ c(.1275, .135),
+      input$variable == "prop_legacy" ~ c(.01, .02),
+      input$variable == "prop_financial_aid" ~ c(.07, .09),
+      input$variable == "prop_group_size" ~ c(6.1, 6.3)
     )
-  )
+    
+    xlabel <- case_when(
+      input$variable == "prop_international" ~ "Percentage of International Students",
+      input$variable == "prop_varsity" ~ "Percentage of Varsity Students",
+      input$variable == "prop_legacy" ~ "Percentage of Legacy Students",
+      input$variable == "prop_financial_aid" ~ "Percentage of Students on Financial Aid",
+      input$variable == "prop_group_size" ~ "Average blocking group size")
+    
+    filtered1 <- full_data_pivoted %>%
+      filter(community == input$neighborhood_1) %>%
+      mutate(prop = map(demographics, ~pull(., case_when(
+        input$variable == "prop_international" ~ prop_international,
+        input$variable == "prop_varsity" ~ prop_varsity,
+        input$variable == "prop_legacy" ~ prop_legacy,
+        input$variable == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable == "prop_group_size" ~ prop_group_size)))) %>%
+      unnest(prop) %>%
+      ungroup(replicate)
+    
+    filtered2 <- full_data_pivoted %>%
+      filter(community == input$neighborhood_2) %>%
+      mutate(prop = map(demographics, ~pull(., case_when(
+        input$variable == "prop_international" ~ prop_international,
+        input$variable == "prop_varsity" ~ prop_varsity,
+        input$variable == "prop_legacy" ~ prop_legacy,
+        input$variable == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable == "prop_group_size" ~ prop_group_size)))) %>%
+      unnest(prop) %>%
+      ungroup(replicate)
+    
+    conf.int1 <- confidence_interval_pivoted(input$neighborhood_1) %>%
+      filter(percentile %in% c(.025, .975)) %>%
+      pull(case_when(
+        input$variable == "prop_international" ~ prop_international,
+        input$variable == "prop_varsity" ~ prop_varsity,
+        input$variable == "prop_legacy" ~ prop_legacy,
+        input$variable == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable == "prop_group_size" ~ prop_group_size))
+    
+    conf.int2 <- confidence_interval_pivoted(input$neighborhood_2) %>%
+      filter(percentile %in% c(.025, .975)) %>%
+      pull(case_when(
+        input$variable == "prop_international" ~ prop_international,
+        input$variable == "prop_varsity" ~ prop_varsity,
+        input$variable == "prop_legacy" ~ prop_legacy,
+        input$variable == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable == "prop_group_size" ~ prop_group_size))
+    
+    
+    base_value1 <- base_data_pivoted %>% 
+      filter(community == input$neighborhood_1) %>%
+      unnest(demographics) %>%
+      pull(case_when(
+        input$variable == "prop_international" ~ prop_international,
+        input$variable == "prop_varsity" ~ prop_varsity,
+        input$variable == "prop_legacy" ~ prop_legacy,
+        input$variable == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable == "prop_group_size" ~ prop_group_size))
+    
+    base_value2 <- base_data_pivoted %>% 
+      filter(community == input$neighborhood_2) %>%
+      unnest(demographics) %>%
+      pull(case_when(
+        input$variable == "prop_international" ~ prop_international,
+        input$variable == "prop_varsity" ~ prop_varsity,
+        input$variable == "prop_legacy" ~ prop_legacy,
+        input$variable == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable == "prop_group_size" ~ prop_group_size))
+    
+    graph1 <- 
+      ggplot(filtered1, aes(x = prop)) +
+      geom_histogram(aes(x = prop, y = ..density..), binwidth = case_when(
+        input$variable != "prop_group_size" ~ .0003,
+        TRUE ~ .0075)) +
+      geom_density(aes(x = prop, y = ..density..)) +
+      geom_vline(xintercept  = conf.int1[1]) + 
+      geom_vline(xintercept  = conf.int1[2]) +
+      geom_vline(xintercept = base_value1,
+                 color = "blue") +
+      labs(title = paste("Showing Data for", case_when(
+        input$neighborhood_1 == "quad" ~ "The Quad",
+        input$neighborhood_1 == "river" ~ "The River",
+        input$neighborhood_1 == "river_east" ~ "River East",
+        input$neighborhood_1 == "river_west" ~ "River West",
+        input$neighborhood_1 == "river_central" ~ "River Central")
+      ),
+      x = xlabel,
+      subtitle = "Bars represent confidence intervals") + 
+      theme_classic()
+    
+    if(input$variable != "prop_group_size"){
+      graph1 <- graph1 + scale_x_continuous(limits = xscale, labels = scales::percent)
+    }
+    else{
+      graph1 <- graph1 + scale_x_continuous(limits = xscale)
+    }
+    
+    
+    graph2 <- ggplot(filtered2, aes(x = prop)) +
+      geom_histogram(aes(x = prop, y = ..density..), binwidth = case_when(
+        input$variable != "prop_group_size" ~ .0003,
+        TRUE ~ .0075)) +
+      geom_density(aes(x = prop, y = ..density..)) +
+      geom_vline(xintercept  = conf.int2[1]) + 
+      geom_vline(xintercept  = conf.int2[2]) + 
+      geom_vline(xintercept = base_value2,
+                 color = "blue") +
+      labs(title = paste("Showing Data for", case_when(
+        input$neighborhood_2 == "quad" ~ "The Quad",
+        input$neighborhood_2 == "river" ~ "The River",
+        input$neighborhood_2 == "river_east" ~ "River East",
+        input$neighborhood_2 == "river_west" ~ "River West",
+        input$neighborhood_2 == "river_central" ~ "River Central")
+      ),
+      x = xlabel,
+      subtitle = "Bars represent confidence intervals") + 
+      theme_classic()
+    
+    
+    if(input$variable != "prop_group_size"){
+      graph2 <- graph2 + scale_x_continuous(limits = xscale, labels = scales::percent)
+    }
+    else{
+      graph2 <- graph2 + scale_x_continuous(limits = xscale)
+    }
+    
+    
+    plot_grid(graph1, graph2)
+    
+  })
   
+  output$allHouses <- renderPlot({
+    
+    pfoho_graph <- 
+      ggplot
+    
+  })
   
-  output$sexualOrientation <-renderPlotly(
-    ggplotly(
-      ggplot(data, aes(x = sexual_orientation)) + 
-        geom_histogram(binwidth = .5, position = "dodge") + 
-        scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6), 
-                           labels = c("Heterosexual", "Homosexual", "Bisexual",
-                                      "Asexual", "Prefer not to Say", "Other")) + 
-        labs(x = "Sexual Orientation",
-             y = "Number of Students") + 
-        theme_classic()
-    )
-  )
-  
-  output$ethnicities <-renderPlotly(
-    ggplotly(
-      ggplot(data, aes(x = ethnicity)) + 
-        geom_histogram(binwidth = .5, position = "dodge") + 
-        scale_x_continuous(breaks = c(1, 2, 3, 4, 5, 6, 7, 8), 
-                           labels = c("White", "Asian", "Black", "Hispanic/LatinX", 
-                                      "Middle Eastern/North African", 
-                                      "Indigenous/Native American", "Prefer not to say",
-                                      "Other"
-                                      )) + 
-        labs(x = "Ethnicity",
-             y = "Number of Students") + 
-        coord_flip() + 
-        theme_classic()
-    )
-  )
-  
-  
-  output$suitematesPerHouse <- renderPlotly(
-    ggplotly(
-      ggplot(suitemates_per_house, aes(x = freshman_dorm, y =  meanSuitemates))  +
-        geom_col() +
-        labs(x = "Average number of Suitemates",
-             y = "Number of Students") + 
-        coord_flip() + 
-        theme_classic()
-      
-    ))
-  
-  #GRAPHS FOR BREAKDOWN OF BLOCKING GROUPS
-
-  output$legaciesByBlockingGroup <- renderPlotly(
-    ggplotly(
-      ggplot(legacies_per_block, aes(x = legacies)) +
-               geom_bar() + 
-        labs(x = "Legacy Students per Blocking Group",
-             y = "Number of Blocking Groups") + 
-        theme_classic()
-      ))
-  
-  
-  output$blockSizes <- renderPlotly(
-    ggplotly(
-      ggplot(how_many_each_size, aes(x = as.factor(group_size), y =  numberOfGroups)) +
-        geom_col() + 
-        labs(x = "Blocking Group Size",
-             y = "Number of Groups") + 
-        theme_classic()
-    )
-  )
-  
-  
-  output$blockingVarsity <- renderPlotly(
-    ggplotly(
-      ggplot(athletes_per_block, aes(x = n)) + 
-        geom_bar() +
-        labs(x = "Number of Varsity Athletes in Blocking Group",
-             y = "Number of Blocking Groups") +
-        theme_classic()
-    )
-  )
 }
 
 shinyApp(ui, server)
+
