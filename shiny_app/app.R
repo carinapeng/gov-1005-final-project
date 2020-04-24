@@ -319,7 +319,8 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
         geom_histogram() + 
-      labs(x = xlabel) + 
+      labs(x = xlabel, 
+           title = "Pfoho") + 
         theme_classic()
     
     currier_conf.int <- confidence_interval(currier) %>%
@@ -338,7 +339,8 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
         geom_histogram() + 
-      labs(x = xlabel) + 
+      labs(x = xlabel, 
+           title = "Currier") + 
         theme_classic()
     
     cabot_conf.int <- confidence_interval(cabot) %>%
@@ -357,7 +359,8 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
         geom_histogram() + 
-      labs(x = xlabel) + 
+      labs(x = xlabel, 
+           title = "Cabot") + 
         theme_classic()
     
     mather_conf.int <- confidence_interval(mather) %>%
@@ -376,7 +379,8 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
         geom_histogram() + 
-      labs(x = xlabel) + 
+      labs(x = xlabel, 
+           title = "Mather") + 
         theme_classic()
     
     leverett_conf.int <- confidence_interval(leverett) %>%
@@ -395,7 +399,8 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
         geom_histogram() + 
-      labs(x = xlabel) + 
+      labs(x = xlabel, 
+           title = "Leverett") + 
         theme_classic()
       
     dunster_conf.int <- confidence_interval(dunster) %>%
@@ -414,7 +419,8 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
       geom_histogram() + 
-     labs(x = xlabel) + 
+     labs(x = xlabel, 
+          title = "Dunster") + 
       theme_classic()
     
     eliot_conf.int <- confidence_interval(eliot) %>%
@@ -433,7 +439,8 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
       geom_histogram() + 
-      labs(x = xlabel) + 
+      labs(x = xlabel, 
+           title = "Eliot") + 
       theme_classic()
     
     kirkland_conf.int <- confidence_interval(kirkland) %>%
@@ -452,7 +459,8 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
       geom_histogram() + 
-      labs(x = xlabel) + 
+      labs(x = xlabel, 
+           title = "Kirkland") + 
       theme_classic()
     
     # 
@@ -490,7 +498,8 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
       geom_histogram() + 
-      labs(x = xlabel) + 
+      labs(x = xlabel, 
+           title = "Adams") + 
       theme_classic()
     
     lowell_conf.int <- confidence_interval(lowell) %>%
@@ -509,7 +518,8 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
       geom_histogram() + 
-      labs(x = xlabel) + 
+      labs(x = xlabel, 
+           title = "Lowell") + 
       theme_classic()
     
     
@@ -530,7 +540,8 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
       geom_histogram() + 
-      labs(x = xlabel) + 
+      labs(x = xlabel,
+           title = "Quincy") + 
       theme_classic()
     
     plot_grid(currier_graph, cabot_graph, pfoho_graph,
