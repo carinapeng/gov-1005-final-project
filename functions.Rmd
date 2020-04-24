@@ -146,7 +146,7 @@ suitemates_reasons <- function(community) {
     prop_hobbies = prop(hobbies, total_suite_reasons),
     prop_friends = prop(friends, total_suite_reasons),
     prop_music = prop(music, total_suite_reasons),
-    prop_reigion = prop(religion, total_suite_reasons)
+    prop_religion = prop(religion, total_suite_reasons)
   )
 
   prop_suite_reason_tibble
@@ -357,8 +357,12 @@ assign_houses <- function(official_housing = official_housing){
 # in that has already had overview() called on it.
 confidence_interval <- function(community, lower_percentile = 0.025, median = 0.5, upper_percentile = 0.975){
   percentiles <- tibble(
+    
+    # set percentiles
     percentile = c(lower_percentile, median, upper_percentile),
     
+    
+    #binary data
     prop_international = quantile(community %>% ungroup() %>% pull(prop_international), 
                                   c(lower_percentile, median, upper_percentile)),
     
@@ -372,7 +376,116 @@ confidence_interval <- function(community, lower_percentile = 0.025, median = 0.
                                   c(lower_percentile, median, upper_percentile)),
     
     prop_group_size = quantile(community %>% ungroup() %>% pull(prop_group_size), 
-                               c(lower_percentile, median, upper_percentile))
+                               c(lower_percentile, median, upper_percentile)),
+    
+    ### non-binary data
+  
+    # ethnicity
+    prop_white = quantile(community %>% ungroup() %>% pull(prop_ethnicity) %>% pull(prop_white), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_asian = quantile(community %>% ungroup() %>% pull(prop_ethnicity) %>% pull(prop_asian), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_black = quantile(community %>% ungroup() %>% pull(prop_ethnicity) %>% pull(prop_black), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_hl = quantile(community %>% ungroup() %>% pull(prop_ethnicity) %>% pull(prop_hl), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_mena = quantile(community %>% ungroup() %>% pull(prop_ethnicity) %>% pull(prop_mena), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_indna = quantile(community %>% ungroup() %>% pull(prop_ethnicity) %>% pull(prop_indna), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_eth_pref = quantile(community %>% ungroup() %>% pull(prop_ethnicity) %>% pull(prop_eth_pref), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    # religion
+    
+    prop_christ = quantile(community %>% ungroup() %>% pull(prop_religion) %>% pull(prop_christ), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_hindu = quantile(community %>% ungroup() %>% pull(prop_religion) %>% pull(prop_hindu), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_muslim = quantile(community %>% ungroup() %>% pull(prop_religion) %>% pull(prop_muslim), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_jewish = quantile(community %>% ungroup() %>% pull(prop_religion) %>% pull(prop_jewish), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_agnos = quantile(community %>% ungroup() %>% pull(prop_religion) %>% pull(prop_agnos), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_athiest = quantile(community %>% ungroup() %>% pull(prop_religion) %>% pull(prop_athiest), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_relig_pref = quantile(community %>% ungroup() %>% pull(prop_religion) %>% pull(prop_relig_pref), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    
+    # sexual_orientation
+    prop_hetero = quantile(community %>% ungroup() %>% pull(prop_sexual_orientation) %>% pull(prop_hetero), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_homo = quantile(community %>% ungroup() %>% pull(prop_sexual_orientation) %>% pull(prop_homo), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_bi = quantile(community %>% ungroup() %>% pull(prop_sexual_orientation) %>% pull(prop_bi), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_as = quantile(community %>% ungroup() %>% pull(prop_sexual_orientation) %>% pull(prop_as), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_sex_pref = quantile(community %>% ungroup() %>% pull(prop_sexual_orientation) %>% pull(prop_sex_pref), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    # group_size
+    prop_one = quantile(community %>% ungroup() %>% pull(distr_group_size) %>% pull(prop_one), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_two = quantile(community %>% ungroup() %>% pull(distr_group_size) %>% pull(prop_two), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_three = quantile(community %>% ungroup() %>% pull(distr_group_size) %>% pull(prop_three), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_four = quantile(community %>% ungroup() %>% pull(distr_group_size) %>% pull(prop_four), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_five = quantile(community %>% ungroup() %>% pull(distr_group_size) %>% pull(prop_five), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_six = quantile(community %>% ungroup() %>% pull(distr_group_size) %>% pull(prop_six), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_seven = quantile(community %>% ungroup() %>% pull(distr_group_size) %>% pull(prop_seven), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_eight = quantile(community %>% ungroup() %>% pull(distr_group_size) %>% pull(prop_eight), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    # suitemates reasons
+    prop_sleep = quantile(community %>% ungroup() %>% pull(prop_suitemates_reasons) %>% pull(prop_sleep), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_aca_int = quantile(community %>% ungroup() %>% pull(prop_suitemates_reasons) %>% pull(prop_aca_int), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_hobbies = quantile(community %>% ungroup() %>% pull(prop_suitemates_reasons) %>% pull(prop_hobbies), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_friends = quantile(community %>% ungroup() %>% pull(prop_suitemates_reasons) %>% pull(prop_friends), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_music = quantile(community %>% ungroup() %>% pull(prop_suitemates_reasons) %>% pull(prop_music), 
+                                  c(lower_percentile, median, upper_percentile)),
+    
+    prop_religion = quantile(community %>% ungroup() %>% pull(prop_suitemates_reasons) %>% pull(prop_religion), 
+                                  c(lower_percentile, median, upper_percentile))
+    
   )
   percentiles
 }
