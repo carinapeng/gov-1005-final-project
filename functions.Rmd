@@ -265,17 +265,17 @@ overview <- function(assigned, community){
 # function
 
 num_adams <- 132
-num_cabot <- 258
-num_leverett <- 414
-num_dunster <- 543
-num_eliot <- 691
-num_kirkland <- 821
-num_currier <- 947
-num_lowell <- 1097
-num_mather <- 1221
-num_pfoho <- 1373
-num_quincy <- 1520
-num_winthrop <- 1637
+num_cabot <- 258 # 126
+num_leverett <- 414 # 156
+num_dunster <- 543 # 129
+num_eliot <- 691 # 148
+num_kirkland <- 821 # 130
+num_currier <- 947 # 126
+num_lowell <- 1097 # 150
+num_mather <- 1221 # 124
+num_pfoho <- 1373 #152
+num_quincy <- 1520 # 147
+num_winthrop <- 1637 # 117
 ```
 
 
@@ -289,6 +289,14 @@ num_winthrop <- 1637
 assign_houses <- function(official_housing = official_housing){
   grouped <- official_housing %>% 
     mutate(random_house = "") %>% 
+    
+    # if someone didn't fill out the survey, we can't put them in a group with others.
+    # we should assign them as though they are a floater but we don't want
+    # to actually assign them a blocking group size because that would mess up the 
+    # analysis later on blocking group size per commmunity. So I create a fake
+    # group size that's used for sorting (1 if someone doesn't have data, or their actual
+    # blocking group size if we have their information).
+    
     mutate(fake_group_size = ifelse(!is.na(group_size),group_size,1)) %>% 
     group_by(group_leader) %>% 
     slice(1)
@@ -336,7 +344,7 @@ assign_houses <- function(official_housing = official_housing){
       else {grouped[row,"random_house"]<- "Winthrop"}
   }
     
-  assigned_all <- left_join(official_housing, grouped, by = "group_name") %>% 
+  assigned_all <- left_join(official_housing, grouped, by = "group_leader") %>% 
   select(1:20, 40) %>%
   rename_at(.vars = vars(ends_with(".x")),
             .funs = funs(sub("[.]x$", "", .))) %>%
