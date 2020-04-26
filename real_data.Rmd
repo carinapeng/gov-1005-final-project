@@ -100,4 +100,5 @@ quad <- all_communities %>%
 ```{r RDS}
 
 saveRDS(object = all_communities, file = "shiny_app/base_data.RDS")
+
 ```

@@ -106,10 +106,6 @@ ci_quad
 ci_diff <- ci_quad/ci_river * 100
 ci_diff
 
-```
-
-```{r analysis}
-
 full_data_pivoted <- all_communities %>%
   pivot_longer(-replicate, names_to = "community", values_to = "demographics")
 
@@ -118,10 +114,11 @@ simplified <- all_communities %>% select(-data, -assigned) %>%
 
 ```
 
+
 ```{r saveRDS}
 
 saveRDS(object = full_data_pivoted, file = "shiny_app/full_data_pivoted.RDS")
-saveRDS(object = other, file = "shiny_app/other.RDS")
+# saveRDS(object = other, file = "shiny_app/other.RDS")
 
 # saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 ```
