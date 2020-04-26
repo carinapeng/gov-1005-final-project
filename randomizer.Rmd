@@ -19,204 +19,23 @@ library(googlesheets4)
 ```
 
 ```{r}
-
 # reads in from the "official_housing"
 # google sheet in the project drive
-
 sheets_deauth()
   
 ss1 <- 'https://docs.google.com/spreadsheets/d/1edQVynHA0j7Dnnth8qTvQtmS3ww768lyl4pyPC8XPoE/edit?usp=sharing'
-
 official_housing <- read_sheet(ss1) 
 ```
 
-```{r calculate_house_size}
-# assigns the appropriate size to each house which is used
-# later to cap the number of people allowed in each house
-# during random assignments. The values are cumulative because
-# it allows the for loop to run smoother in the house assignment
-# function
-
-num_adams <- 95
-num_cabot <- 224
-num_currier <- 356
-num_dunster <- 492
-num_eliot <- 646
-num_kirkland <- 786
-num_leverett <- 903
-num_lowell <- 1050
-num_mather <- 1194
-num_pfoho <- 1327
-num_quincy <- 1495
-num_winthrop <- 1637
-```
-
-
-```{r assign_houses}
-
-# assign houses
-
-# takes in official_housing and assigns houses randomly. For people 
-# who do not have a blocking group size reported, we assign the size
-# 1. We do this in a fake group_size column because otherwise it would
-# affect the size of the real group.
-
-assign_houses <- function(official_housing = official_housing){
-  grouped <- official_housing %>% 
-    mutate(random_house = "") %>% 
-    mutate(fake_group_size = ifelse(!is.na(group_size),group_size,1)) %>% 
-    group_by(group_name) %>% 
-    slice(1)
-  
-  count <- 0
-  for (row in 1:nrow(grouped)) {
-      if((count + grouped[row,"fake_group_size"] )<= num_adams) {
-          grouped[row,"random_house"]<- "Adams"
-          count <- count+ grouped[row,"fake_group_size"]
-      }
-        
-      else if(num_adams < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_cabot) {
-          grouped[row,"random_house"]<- "Cabot"
-          count <- count+ grouped[row,"fake_group_size"]
-      }
-      
-      else if (num_cabot < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_currier){ grouped[row,"random_house"]<- "Currier"
-           count <- count+ grouped[row,"fake_group_size"]}
-  
-      else if (num_currier < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_dunster){ grouped[row,"random_house"]<- "Dunster"
-           count <- count+ grouped[row,"fake_group_size"]}
-    
-      else if (num_dunster < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_eliot){ grouped[row,"random_house"]<- "Eliot"
-           count <- count+ grouped[row,"fake_group_size"]}
-    
-      else if (num_eliot < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_kirkland){ grouped[row,"random_house"]<- "Kirkland"
-           count <- count+ grouped[row,"fake_group_size"]}
-    
-      else if (num_kirkland < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_leverett){ grouped[row,"random_house"]<- "Leverett"
-           count <- count+ grouped[row,"fake_group_size"]}
-    
-      else if (num_leverett < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_lowell){ grouped[row,"random_house"]<- "Lowell"
-           count <- count+ grouped[row,"fake_group_size"]}
-    
-      else if (num_lowell < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_mather){ grouped[row,"random_house"]<- "Mather"
-           count <- count+ grouped[row,"fake_group_size"]}
-    
-      else if (num_mather < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_pfoho){ grouped[row,"random_house"]<- "Pfoho"
-           count <- count+ grouped[row,"fake_group_size"]}
-    
-      else if (num_pfoho < (count + grouped[row,"fake_group_size"] ) & (count + grouped[row,"fake_group_size"] ) <= num_quincy){ grouped[row,"random_house"]<- "Quincy"
-           count <- count+ grouped[row,"fake_group_size"]}
-    
-      else {grouped[row,"random_house"]<- "Winthrop"}
-  }
-    
-  assigned_all <- left_join(official_housing, grouped, by = "group_name") %>% 
-  select(1:20, 40) %>%
-  rename_at(.vars = vars(ends_with(".x")),
-            .funs = funs(sub("[.]x$", "", .))) %>%
-  mutate(house = random_house) 
-  # %>%
-  # select(-random_house, -fake_group_size)
-  
-  assigned_all
-}
-```
 
 ```{r}
-
-overview <- function(assigned, community){
-    
-  if(community == "river_central"){
-    community <- assigned %>%
-    filter(house == "Lowell" | house == "Quincy" | house == "Adams")
-  }
-
-  else if(community == "river_east"){
-    community <- assigned %>%
-      filter(house == "Leverett" | house == "Dunster" | house == "Mather")
-  }
-
-  else if(community == "river_west"){
-    community <- assigned %>%
-      filter(house == "Eliot" | house == "Winthrop" | house == "Kirkland")
-  }
-
-  else if(community == "quad"){
-    community <- assigned %>%
-      filter(house == "Pfoho" | house == "Cabot" | house == "Currier")
-  }
-  
-   else if(community == "river"){
-    community <- assigned %>%
-    filter(house == "Lowell" | house == "Quincy" | house == "Adams" | house == "Leverett" | house == "Dunster" | house == "Mather" | house == "Eliot" | house == "Winthrop" | house == "Kirkland")
-  }
-
-  else{
-    community <- assigned %>%
-    filter(house == community)
-  }
-  
-  
-  tibble(
-    prop_international = mean(community$international, na.rm = TRUE),
-    prop_varsity = mean(community$varsity, na.rm = TRUE),
-    prop_legacy = mean(community$legacy, na.rm = TRUE),
-    prop_financial_aid = mean(community$financial_aid, na.rm = TRUE),
-    prop_group_size = mean(community$group_size, na.rm = TRUE)
-  )
-  # prop_ethnicity
-  # prop_religion
-  # prop_sexual_orientation
-  
-  # consider separating out categorical variables 
-  # and creating separate plots
-  
-  # can do individual ethnicities or put together
-  # a tibble with all of the ethnicities.
-  
-}
-
-# overview()
-# overview(river_central)
-# overview(river_east)
-# overview(river_west)
-# overview(quad)
-
-
-```
-
-
-```{r confidence_interval}
-
-
-# function to caluculate confidence intervals 
-# that takes in the lower percentile and the
-# upper percentile. A community must be passed
-# in that has already had overview() called on it.
-confidence_interval <- function(community, lower_percentile = 0.025, median = 0.5, upper_percentile = 0.975){
-  percentiles <- tibble(
-    percentile = c(lower_percentile, median, upper_percentile),
-    prop_international = quantile(community %>% ungroup() %>% pull(prop_international), c(lower_percentile, median, upper_percentile)),
-    prop_varsity = quantile(community %>% ungroup() %>% pull(prop_varsity), c(lower_percentile, median, upper_percentile)),
-    prop_legacy = quantile(community %>% ungroup() %>% pull(prop_legacy), c(lower_percentile, median, upper_percentile)),
-    prop_financial_aid = quantile(community %>% ungroup() %>% pull(prop_financial_aid), c(lower_percentile, median, upper_percentile)),
-    prop_group_size = quantile(community %>% ungroup() %>% pull(prop_group_size), c(lower_percentile, median, upper_percentile))   
-  )
-  percentiles
-}
-
-
-```
-
-```{r}
-
 all_communities <- official_housing %>% 
   
   # 1) replicate the official_housing of freshmen and group_by each replicate
   
-  rep_sample_n(size = nrow(official_housing), replace = FALSE, reps = 30) %>% 
+  rep_sample_n(size = nrow(official_housing), replace = FALSE, reps = 500) %>% 
   group_by(replicate)  %>% 
-  nest() %>% 
+  nest() %>%
   
   # 2) take each tibble of freshmen and assign houses
   
@@ -253,32 +72,24 @@ all_communities <- official_housing %>%
   mutate(currier = map(assigned, ~overview(assigned = ., community = 'Currier'))) %>% 
   mutate(pfoho = map(assigned, ~overview(assigned = ., community = 'Pfoho'))) %>% 
   mutate(cabot = map(assigned, ~overview(assigned = ., community = 'Cabot'))) 
-
 ```
 
 ```{r neighborhoods}
-
 # generates summary statistics for neighborhoods
-
 neighborhoods <- all_communities %>% 
   select(replicate, river_central, river_east, river_west, quad) 
-
 river_central <- all_communities %>% 
   select(replicate, river_central) %>% 
   unnest(river_central)
-
 river_east <- all_communities %>% 
   select(replicate, river_east) %>% 
   unnest(river_east)
-
 river_west <- all_communities %>% 
   select(replicate, river_west) %>% 
   unnest(river_west)
-
 river <- all_communities %>% 
   select(replicate, river) %>% 
   unnest(river)
-
 quad <- all_communities %>% 
   select(replicate, quad) %>% 
   unnest(quad)
@@ -291,12 +102,25 @@ ci_river
 
 ci_quad <- confidence_interval(quad)
 ci_quad
+
+ci_diff <- ci_quad/ci_river * 100
+ci_diff
+
+full_data_pivoted <- all_communities %>%
+  pivot_longer(-replicate, names_to = "community", values_to = "demographics")
+
+simplified <- all_communities %>% select(-data, -assigned) %>% 
+  pivot_longer(-replicate, names_to = "community", values_to = "demographics")
+
 ```
 
 
-
 ```{r saveRDS}
-saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
+
+saveRDS(object = full_data_pivoted, file = "shiny_app/full_data_pivoted.RDS")
+# saveRDS(object = other, file = "shiny_app/other.RDS")
+
+# saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
 ```
 
 

@@ -43,6 +43,7 @@ official_housing <- left_join(x = partial,
 
 ```
 
+
 ```{r write_data}
 
 write_excel_csv2(official_housing, path = "official_housing.csv") 
