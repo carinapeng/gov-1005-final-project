@@ -1,0 +1,12 @@
+name: housing_project
+title: housing_project
+username:
+account: eliotdmin
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2180171
+bundleId: 3060749
+url: https://eliotdmin.shinyapps.io/housing_project/
+when: 1587749545.66514
+asMultiple: FALSE
+asStatic: FALSE

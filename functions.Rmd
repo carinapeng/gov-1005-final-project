@@ -21,10 +21,8 @@ library(googlesheets4)
 ```
 
 ```{r prop_function, echo=F}
-
 # determining proportions
 # general prop function
-
 prop <- function(list1,list2) {
   length(list1)/length(list2)
 }
@@ -32,10 +30,8 @@ prop <- function(list1,list2) {
 
 
 ```{r ethnicity, echo=F}
-
 # ethnicity
 # selecting rows into a list
-
 ethnicity <- function(community) {
   w <- which(grepl("White", community$ethnicity))
   a <- which(grepl("Asian", community$ethnicity))
@@ -61,9 +57,7 @@ ethnicity <- function(community) {
 ```
 
 ```{r religion, echo=F}
-
 # religion
-
 religion <- function(community) {
   christ <- which(grepl("Christian", community$religion))
   hindu <- which(grepl("Hindu", community$religion))
@@ -72,11 +66,9 @@ religion <- function(community) {
   agnos <- which(grepl("Agnostic", community$religion))
   athiest <- which(grepl("Athiest", community$religion))
   relig_pref <- which(grepl("Prefer not to say", community$religion))
-
 # total religions reported
   
   total_relig = c(christ, hindu, muslim, jewish, agnos, athiest, relig_pref)
-
 # religion proportions table
   prop_relig_table <- tibble(
     prop_christ = prop(christ, total_relig),
@@ -87,28 +79,21 @@ religion <- function(community) {
     prop_athiest = prop(athiest, total_relig),
     prop_relig_pref = prop(relig_pref, total_relig)
   )
-
   prop_relig_table
 }
 ```
 
 ```{r sex_or, echo=F}
-
 # sexual orientation
-
 sexual_orientation <- function(community) {
   hetero <- which(grepl("Heterosexual", community$sexual_orientation))
   homo <- which(grepl("Homosexual", community$sexual_orientation))
   bi <- which(grepl("Bisexual", community$sexual_orientation))
   as <- which(grepl("Asexual", community$sexual_orientation))
   sex_pref <- which(grepl("Prefer not to say", community$sexual_orientation))
-
 # total sexual orientations reported
-
   total_sex <- c(hetero, homo, bi, as, sex_pref)
-
 # sexual orientation proportions table
-
   prop_sex_tibble <- tibble(
     prop_hetero = prop(hetero, total_sex),
     prop_homo = prop(homo, total_sex),
@@ -116,16 +101,12 @@ sexual_orientation <- function(community) {
     prop_as = prop(as, total_sex),
     prop_sex_pref = prop(sex_pref, total_sex)
   )
-
   prop_sex_tibble
 }
-
 ```
 
 ```{r reason_suitemates, echo=F}
-
 # reason for blocking with suitemates
-
 suitemates_reasons <- function(community) {
   sleep <- which(grepl("Similar sleeping schedules", community$reason_suitemates))
   aca_int <- which(grepl("Common academic interests", community$reason_suitemates))
@@ -133,13 +114,9 @@ suitemates_reasons <- function(community) {
   friends <- which(grepl("Similar friend groups", community$reason_suitemates))
   music <- which(grepl("Same taste for music", community$reason_suitemates))
   religion <- which(grepl("Same religion", community$reason_suitemates))
-
 # total suite_reasons reported
-
   total_suite_reasons <- c(sleep, aca_int, hobbies, friends, music, religion)
-
 # blocking with suitemates reason proportions table
-
   prop_suite_reason_tibble <- tibble(
     prop_sleep = prop(sleep, total_suite_reasons),
     prop_aca_int = prop(aca_int, total_suite_reasons),
@@ -148,14 +125,11 @@ suitemates_reasons <- function(community) {
     prop_music = prop(music, total_suite_reasons),
     prop_religion = prop(religion, total_suite_reasons)
   )
-
   prop_suite_reason_tibble
 }
-
 ```
 
 ```{r group_size, echo=F}
-
 group_size <- function(community) {
   one <- which(grepl(1, community$group_size))
   two <- which(grepl(2, community$group_size))
@@ -165,13 +139,9 @@ group_size <- function(community) {
   six <- which(grepl(6, community$group_size))
   seven <- which(grepl(7, community$group_size))
   eight <- which(grepl(8, community$group_size))
-
 # total sizes reported
-
   total_sizes <- c(one, two, three, four, five, six, seven, eight)
-
 # group size proportions table
-
   distr_group_size_tibble <- tibble(
     prop_one = prop(one, total_sizes),
     prop_two = prop(two, total_sizes),
@@ -188,7 +158,6 @@ group_size <- function(community) {
 ```
 
 ```{r overview_function}
-
 # generates summary statistics for any identifiable community. 
 # It takes in a sheet of assigned houses and then also takes
 # in a community within the assigned sheet that you would like
@@ -197,19 +166,16 @@ group_size <- function(community) {
 # houses.
 #
 # summary statistics are returned in the form of a tibble
-
 overview <- function(assigned, community){
     
   if(community == "river_central"){
     community <- assigned %>%
     filter(house == "Lowell" | house == "Quincy" | house == "Adams")
   }
-
   else if(community == "river_east"){
     community <- assigned %>%
       filter(house == "Leverett" | house == "Dunster" | house == "Mather")
   }
-
   else if(community == "river_west"){
     community <- assigned %>%
       filter(house == "Eliot" | house == "Winthrop" | house == "Kirkland")
@@ -219,12 +185,10 @@ overview <- function(assigned, community){
     community <- assigned %>%
     filter(house == "Lowell" | house == "Quincy" | house == "Adams" | house == "Leverett" | house == "Dunster" | house == "Mather" | house == "Eliot" | house == "Winthrop" | house == "Kirkland")
   }
-
   else if(community == "quad"){
     community <- assigned %>%
       filter(house == "Pforzheimer" | house == "Cabot" | house == "Currier")
   }
-
   else{
     community <- assigned %>%
     filter(house == community)
@@ -361,8 +325,6 @@ assign_houses <- function(official_housing = official_housing){
 ```
 
 ```{r confidence_interval}
-
-
 # function to caluculate confidence intervals 
 # that takes in the lower percentile and the
 # upper percentile. A community must be passed
@@ -501,6 +463,4 @@ confidence_interval <- function(community, lower_percentile = 0.025, median = 0.
   )
   percentiles
 }
-
-
 ```
