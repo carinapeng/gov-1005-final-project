@@ -77,6 +77,7 @@ base_winthrop <- base_data %>% select(winthrop) %>% unnest(winthrop)
 
 ethnicities <- readRDS("ethnicity_results.RDS")
 gender <- readRDS("gender_results.RDS")
+orientations <- readRDS("orientation_results.RDS")
 
 #Staying with suite mates against size of frosh dorm
 
@@ -234,12 +235,16 @@ ui <- navbarPage(theme = shinytheme("simplex"),
                            tabPanel("Self-Segregation",
                          titlePanel("Self-Segregation by Race"),
                          p("We wanted to investigate whether students self-segregated during the blocking process. Our first analysis, conducted below, shows that there is some degree of self-segregation. Of all the blocking groups that contained at least one Asian student, more than twenty percent of them were comprised entirely of Asian students. On the other hand, less than ten percent of the blocking groups that contained white students were entirely white."),
-                         plotOutput("segregationGraphs") %>%
+                         plotOutput("segregationGraphs", width = "110%") %>%
                   withSpinner(color="#0dc5c1"),
+                  titlePanel("Self-Segregation by Sexual Orientation"),
+                  p("We were also curious about self-segregation among students of different sexual orientations. There was a striking divide between blocking groups that contained homosexual students and those that contained heterosexual students. The majority of groups containing at least one heterosexual member were comprised entirely of heterosexual students, while the majority of blocking groups with at least one homosexual member were less than 50% composed of homosexual members."),
+                  plotOutput("sexualOrientationGraphs", width = "110%") %>%
+                    withSpinner(color="#0dc5c1"),
                   titlePanel("Self-Segregation by Gender"),
                   p("
-                    We also investigated gender distribution across blocking groups and found segregation occured in that realm also. 40 percent of blocking groups that contained a member of one gender were comprised entirely of that gender, a trend that was found in both the male and female genders."),
-                  plotOutput("genderGraphs") %>%
+                    Finally, we also investigated gender distribution across blocking groups and found segregation occured in that realm also. 40 percent of blocking groups that contained a member of one gender were comprised entirely of that gender, a trend that was found in both the male and female genders."),
+                  plotOutput("genderGraphs", width = "110%") %>%
                     withSpinner(color="#0dc5c1")),
                   tabPanel("Correlations",
                              titlePanel("Blocking with your Suitemates"),
@@ -794,6 +799,28 @@ This likely causes the discrepancy seen here.")
   })
   
   output$sexualOrientationGraphs <- renderPlot({
+    
+    heterosexuals <- ggplot(orientations %>% filter(prop_heterosexual > 0) %>% count(prop_heterosexual), aes(x=prop_heterosexual, y = n/70)) + 
+      geom_col(width = .05) + 
+      scale_x_continuous(limits = c(.1, 1.1), breaks = c(.1, .2, .3, .4, .5, .6, .7, .8, .9, 1), labels = scales::percent) +
+      scale_y_continuous(limits = c(0, .5), labels = scales::percent) +
+      labs(x = "Percentage of heterosexual students within blocking group", 
+           y = "Percentage of blocking groups",
+           title = "Composition of blocking groups containing heterosexual students",
+           subtitle = "70 blocking groups contained at least one heterosexual student") +
+      theme_classic() 
+    
+    homosexuals <- ggplot(orientations %>% filter(prop_homosexual > 0) %>% count(prop_homosexual), aes(x=prop_homosexual, y = n/20)) + 
+      geom_col(width = .05) + 
+      scale_x_continuous(limits = c(.1, 1.1), breaks = c(.1, .2, .3, .4, .5, .6, .7, .8, .9, 1), labels = scales::percent) +
+      scale_y_continuous(limits = c(0, .5), labels = scales::percent) +
+      labs(x = "Percentage of homosexual students within blocking group", 
+           y = "Percentage of blocking groups",
+           title = "Composition of blocking groups containing homosexual students",
+           subtitle = "20 blocking groups contained at least one homosexual student") +
+      theme_classic() 
+    
+    plot_grid(homosexuals, heterosexuals)
     
   })
   
