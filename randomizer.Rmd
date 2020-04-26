@@ -37,7 +37,7 @@ all_communities <- official_housing %>%
   
   # 1) replicate the official_housing of freshmen and group_by each replicate
   
-  rep_sample_n(size = nrow(official_housing), replace = FALSE, reps = 30) %>% 
+  rep_sample_n(size = nrow(official_housing), replace = FALSE, reps = 10) %>% 
   group_by(replicate)  %>% 
   nest() %>%
   
@@ -114,7 +114,11 @@ ci_river
 
 ci_quad <- confidence_interval(quad)
 ci_quad
+
+ci_diff <- ci_quad/ci_river * 100
+ci_diff
 ```
+
 
 
 
