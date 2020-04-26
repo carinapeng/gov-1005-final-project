@@ -10,26 +10,25 @@ library(cowplot)
 
 # must install plotly package
 
-full_data <- readRDS("updated_fake_data.RDS")
-full_data_pivoted <- full_data %>% select(-data, -assigned) %>%
-  pivot_longer(-replicate, names_to = "community", values_to = "demographics")
+simplified <- readRDS("simplified.RDS")
 
 base_data <- readRDS("base_data.RDS") %>% ungroup()
+
 base_data_pivoted <- base_data %>% 
   pivot_longer(-data, names_to = "community", values_to = "demographics")
 
-pfoho <- full_data %>% select(replicate, pfoho) %>% unnest(pfoho)
-currier <- full_data %>% select(replicate, currier) %>% unnest(currier)
-cabot <- full_data %>% select(replicate, cabot) %>% unnest(cabot)
-mather <- full_data %>% select(replicate, mather) %>% unnest(mather)
-dunster <- full_data %>% select(replicate, dunster) %>% unnest(dunster)
-leverett <- full_data %>% select(replicate, leverett) %>% unnest(leverett)
-quincy <- full_data %>% select(replicate, quincy) %>% unnest(quincy)
-adams <- full_data %>% select(replicate, adams) %>% unnest(adams)
-lowell <- full_data %>% select(replicate, lowell) %>% unnest(lowell)
-eliot <- full_data %>% select(replicate, eliot) %>% unnest(eliot)
-kirkland <- full_data %>% select(replicate, kirkland) %>% unnest(kirkland)
-winthrop <- full_data %>% select(replicate, winthrop) %>% unnest(winthrop)
+pfoho <- simplified %>% filter(community == "pfoho") %>% unnest(demographics) %>% ungroup()
+currier <- simplified %>% filter(community == "currier") %>% unnest(demographics) %>% ungroup()
+cabot <- simplified %>% filter(community == "cabot") %>% unnest(demographics) %>% ungroup()
+mather <- simplified %>% filter(community == "mather") %>% unnest(demographics) %>% ungroup()
+dunster <- simplified %>% filter(community == "dunster") %>% unnest(demographics) %>% ungroup()
+leverett <- simplified %>% filter(community == "leverett") %>% unnest(demographics) %>% ungroup()
+quincy <- simplified %>% filter(community == "quincy") %>% unnest(demographics) %>% ungroup()
+adams <- simplified %>% filter(community == "adams") %>% unnest(demographics) %>% ungroup()
+lowell <- simplified %>% filter(community == "lowell") %>% unnest(demographics) %>% ungroup()
+eliot <- simplified %>% filter(community == "eliot") %>% unnest(demographics) %>% ungroup()
+kirkland <- simplified %>% filter(community == "kirkland") %>% unnest(demographics) %>% ungroup()
+winthrop <- simplified %>% filter(community == "winthrop") %>% unnest(demographics) %>% ungroup()
 
 base_pfoho <- base_data %>% select(pforzheimer) %>% unnest(pforzheimer)
 base_currier <- base_data %>% select(currier) %>% unnest(currier)
@@ -46,24 +45,11 @@ base_winthrop <- base_data %>% select(winthrop) %>% unnest(winthrop)
 
 #Confidence interval function
 
-confidence_interval <- function(community, lower_percentile = 0.025, median = 0.5, upper_percentile = 0.975){
-  
-  percentiles <- tibble(
-    percentile = c(lower_percentile, median, upper_percentile),
-    prop_international = quantile(community %>% ungroup() %>% pull(prop_international), c(lower_percentile, median, upper_percentile)),
-    prop_varsity = quantile(community %>% ungroup() %>% pull(prop_varsity), c(lower_percentile, median, upper_percentile)),
-    prop_legacy = quantile(community %>% ungroup() %>% pull(prop_legacy), c(lower_percentile, median, upper_percentile)),
-    prop_financial_aid = quantile(community %>% ungroup() %>% pull(prop_financial_aid), c(lower_percentile, median, upper_percentile)),
-    prop_group_size = quantile(community %>% ungroup() %>% pull(prop_group_size), c(lower_percentile, median, upper_percentile))   
-  )
-  percentiles
-}
-
 #LIMIT TO THE VARIABLES WE'RE CHOOSING TO DO
 
 confidence_interval_pivoted <- function(section, lower_percentile = 0.025, median = 0.5, upper_percentile = 0.975){
   
-  selected <- full_data_pivoted %>% filter(community == section)
+  selected <- simplified %>% filter(community == section)
   
   percentiles <- tibble(
     percentile = c(lower_percentile, median, upper_percentile),
@@ -84,11 +70,20 @@ confidence_interval_pivoted <- function(section, lower_percentile = 0.025, media
   
 }
 
+pull_desired <- function(data, variable){
+  pull(data, case_when(
+    variable == "prop_international" ~ prop_international,
+    variable == "prop_varsity" ~ prop_varsity,
+    variable == "prop_legacy" ~ prop_legacy,
+    variable == "prop_financial_aid" ~ prop_financial_aid,
+    variable == "prop_group_size" ~ prop_group_size))
+}
+
 ui <- navbarPage(theme = shinytheme("darkly"),
                  "Blocking Project",
-                 tabPanel("Comparisons",
+                 tabPanel("Comparisons Across Neighborhoods",
                           navlistPanel(
-                            tabPanel("Comparisons Across Neighborhoods",
+                            tabPanel("WhatToCall",
                                      selectInput("neighborhood_1", 
                                                  label = "Graph 1",
                                                  choices = c("River West" = "river_west",
@@ -113,7 +108,7 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                                                              "Financial Aid" = "prop_financial_aid",
                                                              "Blocking Group Size" = "prop_group_size")),
                                      mainPanel(
-                                       plotOutput("graphsTogether")
+                                       plotOutput("graphsTogether", width = "150%")
                                      )))),
                  tabPanel("Comparisons Across Houses",
                           selectInput("variable2",
@@ -125,7 +120,7 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                                                    "Blocking Group Size" = "prop_group_size")
                  ),
                  mainPanel(
-                   plotOutput("allHouses")
+                   plotOutput("allHouses", width = "140%")
                  )),
                  tabPanel("Discussion",
                           titlePanel("Conclusions from Fake Data"),
@@ -150,90 +145,61 @@ All Sensitive questions have a “prefer not to answer” option."),
 
 server <- function(input, output) {
   
+  
+  
   output$graphsTogether <- renderPlot({
     
     xscale <- case_when(
-      input$variable2 == "prop_international" ~ c(.01, .04),
-      input$variable2 == "prop_varsity" ~ c(.1275, .135),
-      input$variable2 == "prop_legacy" ~ c(.01, .02),
-      input$variable2 == "prop_financial_aid" ~ c(.07, .09),
-      input$variable2 == "prop_group_size" ~ c(6.1, 6.3)
+      input$variable == "prop_international" ~ c(.05, .25),
+      input$variable == "prop_varsity" ~ c(.10, .3),
+      input$variable == "prop_legacy" ~ c(.1, .25),
+      input$variable == "prop_financial_aid" ~ c(.5, .8),
+      input$variable == "prop_group_size" ~ c(5, 7)
     )
     
     xlabel <- case_when(
-      input$variable2 == "prop_international" ~ "Percentage of International Students",
-      input$variable2 == "prop_varsity" ~ "Percentage of Varsity Students",
-      input$variable2 == "prop_legacy" ~ "Percentage of Legacy Students",
-      input$variable2 == "prop_financial_aid" ~ "Percentage of Students on Financial Aid",
-      input$variable2 == "prop_group_size" ~ "Average blocking group size")
+      input$variable == "prop_international" ~ "Percentage of International Students",
+      input$variable == "prop_varsity" ~ "Percentage of Varsity Students",
+      input$variable == "prop_legacy" ~ "Percentage of Legacy Students",
+      input$variable == "prop_financial_aid" ~ "Percentage of Students on Financial Aid",
+      input$variable == "prop_group_size" ~ "Average blocking group size"
+      )
     
-    filtered1 <- full_data_pivoted %>%
+    filtered1 <- simplified %>%
       filter(community == input$neighborhood_1) %>%
-      mutate(prop = map(demographics, ~pull(., case_when(
-        input$variable2 == "prop_international" ~ prop_international,
-        input$variable2 == "prop_varsity" ~ prop_varsity,
-        input$variable2 == "prop_legacy" ~ prop_legacy,
-        input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable2 == "prop_group_size" ~ prop_group_size)))) %>%
+      mutate(prop = map(demographics, ~pull_desired(., input$variable))) %>%
       unnest(prop) %>%
       ungroup(replicate)
     
-    filtered2 <- full_data_pivoted %>%
+    filtered2 <- simplified %>%
       filter(community == input$neighborhood_2) %>%
-      mutate(prop = map(demographics, ~pull(., case_when(
-        input$variable2 == "prop_international" ~ prop_international,
-        input$variable2 == "prop_varsity" ~ prop_varsity,
-        input$variable2 == "prop_legacy" ~ prop_legacy,
-        input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable2 == "prop_group_size" ~ prop_group_size)))) %>%
+      mutate(prop = map(demographics, ~pull_desired(., input$variable))) %>%
       unnest(prop) %>%
       ungroup(replicate)
     
     conf.int1 <- confidence_interval_pivoted(input$neighborhood_1) %>%
       filter(percentile %in% c(.025, .975)) %>%
-      pull(case_when(
-        input$variable == "prop_international" ~ prop_international,
-        input$variable == "prop_varsity" ~ prop_varsity,
-        input$variable == "prop_legacy" ~ prop_legacy,
-        input$variable == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable == "prop_group_size" ~ prop_group_size))
+      pull_desired(., input$variable)
     
     conf.int2 <- confidence_interval_pivoted(input$neighborhood_2) %>%
       filter(percentile %in% c(.025, .975)) %>%
-      pull(case_when(
-        input$variable == "prop_international" ~ prop_international,
-        input$variable == "prop_varsity" ~ prop_varsity,
-        input$variable == "prop_legacy" ~ prop_legacy,
-        input$variable == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable == "prop_group_size" ~ prop_group_size))
-    
+      pull_desired(., input$variable)
     
     base_value1 <- base_data_pivoted %>% 
       filter(community == input$neighborhood_1) %>%
       unnest(demographics) %>%
-      pull(case_when(
-        input$variable == "prop_international" ~ prop_international,
-        input$variable == "prop_varsity" ~ prop_varsity,
-        input$variable == "prop_legacy" ~ prop_legacy,
-        input$variable == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable == "prop_group_size" ~ prop_group_size))
+      pull_desired(., input$variable)
     
     base_value2 <- base_data_pivoted %>% 
       filter(community == input$neighborhood_2) %>%
       unnest(demographics) %>%
-      pull(case_when(
-        input$variable == "prop_international" ~ prop_international,
-        input$variable == "prop_varsity" ~ prop_varsity,
-        input$variable == "prop_legacy" ~ prop_legacy,
-        input$variable == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable == "prop_group_size" ~ prop_group_size))
+      pull_desired(., input$variable)
     
     graph1 <- 
       ggplot(filtered1, aes(x = prop)) +
       geom_histogram(aes(x = prop, y = ..density..), binwidth = case_when(
-        input$variable != "prop_group_size" ~ .0003,
-        TRUE ~ .0075)) +
-      geom_density(aes(x = prop, y = ..density..)) +
+        input$variable != "prop_group_size" ~ .01,
+        TRUE ~ .25)) +
       geom_vline(xintercept  = conf.int1[1]) + 
       geom_vline(xintercept  = conf.int1[2]) +
       geom_vline(xintercept = base_value1,
@@ -259,9 +225,8 @@ server <- function(input, output) {
     
     graph2 <- ggplot(filtered2, aes(x = prop)) +
       geom_histogram(aes(x = prop, y = ..density..), binwidth = case_when(
-        input$variable != "prop_group_size" ~ .0003,
-        TRUE ~ .0075)) +
-      geom_density(aes(x = prop, y = ..density..)) +
+        input$variable != "prop_group_size" ~ .01,
+        TRUE ~ .25)) +
       geom_vline(xintercept  = conf.int2[1]) + 
       geom_vline(xintercept  = conf.int2[2]) + 
       geom_vline(xintercept = base_value2,
@@ -277,7 +242,6 @@ server <- function(input, output) {
       subtitle = "Bars represent confidence intervals") + 
       theme_classic()
     
-    
     if(input$variable != "prop_group_size"){
       graph2 <- graph2 + scale_x_continuous(limits = xscale, labels = scales::percent)
     }
@@ -291,8 +255,6 @@ server <- function(input, output) {
   })
   
   output$allHouses <- renderPlot({
-    
-    #READYING GRAPHS. MIGHT NEED TO DO THIS SEPARATELY
   
     xlabel <- case_when(
       input$variable2 == "prop_international" ~ "Percentage of International Students",
@@ -301,75 +263,91 @@ server <- function(input, output) {
       input$variable2 == "prop_financial_aid" ~ "Percentage of Students on Financial Aid",
       input$variable2 == "prop_group_size" ~ "Average Blocking Group Size"
     )
-      
-    pfoho_conf.int <- confidence_interval(pfoho) %>%
-      filter(percentile %in% c(.025, .975)) %>%
-      pull(case_when(
-        input$variable2 == "prop_international" ~ prop_international,
-        input$variable2 == "prop_varsity" ~ prop_varsity,
-        input$variable2 == "prop_legacy" ~ prop_legacy,
-        input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable2 == "prop_group_size" ~ prop_group_size))
     
-    pfoho_graph <- ggplot(pfoho, aes(x = case_when(
-      input$variable2 == "prop_international" ~ prop_international,
-      input$variable2 == "prop_varsity" ~ prop_varsity,
-      input$variable2 == "prop_legacy" ~ prop_legacy,
-      input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-      input$variable2 == "prop_group_size" ~ prop_group_size))) + 
-        geom_histogram() + 
-      labs(x = xlabel, 
+    ylabel <- "Replicates"
+    
+    xscale <- case_when(
+      input$variable2 == "prop_international" ~ c(0, .3),
+      input$variable2 == "prop_varsity" ~ c(0, .3),
+      input$variable2 == "prop_legacy" ~ c(.05, .3),
+      input$variable2 == "prop_financial_aid" ~ c(.4, .8),
+      input$variable2 == "prop_group_size" ~ c(4, 8)
+    )
+      
+    pfoho_conf.int <- confidence_interval_pivoted("pfoho") %>%
+      filter(percentile %in% c(.025, .975)) %>%
+      pull_desired(., input$variable2)
+    
+    pfoho_graph <- ggplot(pfoho, aes(x = pull_desired(pfoho, input$variable2))) +
+        geom_histogram(binwidth = case_when(
+          input$variable2 != "prop_group_size" ~ .01,
+          TRUE ~ .25)) + 
+      labs(x = xlabel,
+           y = ylabel,
            title = "Pfoho") + 
+      geom_vline(xintercept = pfoho_conf.int[1]) + 
+      geom_vline(xintercept = pfoho_conf.int[2]) +
+      geom_vline(xintercept = pull_desired(base_pfoho, input$variable2)
+      , color = "blue") +
         theme_classic()
     
-    currier_conf.int <- confidence_interval(currier) %>%
+    currier_conf.int <- confidence_interval_pivoted("currier") %>%
       filter(percentile %in% c(.025, .975)) %>%
-      pull(case_when(
-        input$variable2 == "prop_international" ~ prop_international,
-        input$variable2 == "prop_varsity" ~ prop_varsity,
-        input$variable2 == "prop_legacy" ~ prop_legacy,
-        input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable2 == "prop_group_size" ~ prop_group_size))
+      pull_desired(., input$variable2)
     
     currier_graph <- ggplot(currier, aes(x = case_when(
       input$variable2 == "prop_international" ~ prop_international,
       input$variable2 == "prop_varsity" ~ prop_varsity,
       input$variable2 == "prop_legacy" ~ prop_legacy,
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-      input$variable2 == "prop_group_size" ~ prop_group_size))) + 
-        geom_histogram() + 
+      input$variable2 == "prop_group_size" ~ prop_group_size))) +
+      geom_histogram(binwidth = case_when(
+        input$variable2 != "prop_group_size" ~ .01,
+        TRUE ~ .25)) +
       labs(x = xlabel, 
+           y = ylabel,
            title = "Currier") + 
-        theme_classic()
-    
-    cabot_conf.int <- confidence_interval(cabot) %>%
-      filter(percentile %in% c(.025, .975)) %>%
-      pull(case_when(
+      geom_vline(xintercept = currier_conf.int[1]) + 
+      geom_vline(xintercept = currier_conf.int[2]) +
+      geom_vline(xintercept = base_currier %>% pull(case_when(
         input$variable2 == "prop_international" ~ prop_international,
         input$variable2 == "prop_varsity" ~ prop_varsity,
         input$variable2 == "prop_legacy" ~ prop_legacy,
         input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable2 == "prop_group_size" ~ prop_group_size))
+        input$variable2 == "prop_group_size" ~ prop_group_size)
+      ), color = "blue") +
+        theme_classic()
+    
+    cabot_conf.int <- confidence_interval_pivoted("cabot") %>%
+      filter(percentile %in% c(.025, .975)) %>%
+      pull_desired(., input$variable2)
     
     cabot_graph <- ggplot(cabot, aes(x = case_when(
       input$variable2 == "prop_international" ~ prop_international,
       input$variable2 == "prop_varsity" ~ prop_varsity,
       input$variable2 == "prop_legacy" ~ prop_legacy,
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-      input$variable2 == "prop_group_size" ~ prop_group_size))) + 
-        geom_histogram() + 
+      input$variable2 == "prop_group_size" ~ prop_group_size))) +
+      geom_histogram(binwidth = case_when(
+        input$variable2 != "prop_group_size" ~ .01,
+        TRUE ~ .25)) +
       labs(x = xlabel, 
+           y = ylabel,
            title = "Cabot") + 
-        theme_classic()
-    
-    mather_conf.int <- confidence_interval(mather) %>%
-      filter(percentile %in% c(.025, .975)) %>%
-      pull(case_when(
+      geom_vline(xintercept = cabot_conf.int[1]) + 
+      geom_vline(xintercept = cabot_conf.int[2]) + 
+      geom_vline(xintercept = base_cabot %>% pull(case_when(
         input$variable2 == "prop_international" ~ prop_international,
         input$variable2 == "prop_varsity" ~ prop_varsity,
         input$variable2 == "prop_legacy" ~ prop_legacy,
         input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable2 == "prop_group_size" ~ prop_group_size))
+        input$variable2 == "prop_group_size" ~ prop_group_size)
+      ), color = "blue") +
+        theme_classic()
+    
+    mather_conf.int <- confidence_interval_pivoted("mather") %>%
+      filter(percentile %in% c(.025, .975)) %>%
+      pull_desired(., input$variable2)
     
     mather_graph <- ggplot(mather, aes(x = case_when(
       input$variable2 == "prop_international" ~ prop_international,
@@ -377,52 +355,78 @@ server <- function(input, output) {
       input$variable2 == "prop_legacy" ~ prop_legacy,
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) + 
-        geom_histogram() + 
+      geom_histogram(binwidth = case_when(
+        input$variable2 != "prop_group_size" ~ .01,
+        TRUE ~ .25)) +
       labs(x = xlabel, 
+           y = ylabel,
            title = "Mather") + 
-        theme_classic()
-    
-    leverett_conf.int <- confidence_interval(leverett) %>%
-      filter(percentile %in% c(.025, .975)) %>%
-      pull(case_when(
+      geom_vline(xintercept = mather_conf.int[1]) + 
+      geom_vline(xintercept = mather_conf.int[2]) + 
+      geom_vline(xintercept = base_mather %>% pull(case_when(
         input$variable2 == "prop_international" ~ prop_international,
         input$variable2 == "prop_varsity" ~ prop_varsity,
         input$variable2 == "prop_legacy" ~ prop_legacy,
         input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable2 == "prop_group_size" ~ prop_group_size))
+        input$variable2 == "prop_group_size" ~ prop_group_size)
+      ), color = "blue") +
+        theme_classic()
+    
+    leverett_conf.int <- confidence_interval_pivoted("leverett") %>%
+      filter(percentile %in% c(.025, .975)) %>%
+      pull_desired(., input$variable2)
     
     leverett_graph <- ggplot(leverett, aes(x = case_when(
       input$variable2 == "prop_international" ~ prop_international,
       input$variable2 == "prop_varsity" ~ prop_varsity,
       input$variable2 == "prop_legacy" ~ prop_legacy,
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-      input$variable2 == "prop_group_size" ~ prop_group_size))) + 
-        geom_histogram() + 
+      input$variable2 == "prop_group_size" ~ prop_group_size))) +
+      geom_histogram(binwidth = case_when(
+        input$variable2 != "prop_group_size" ~ .01,
+        TRUE ~ .25)) +
       labs(x = xlabel, 
+           y = ylabel,
            title = "Leverett") + 
-        theme_classic()
-      
-    dunster_conf.int <- confidence_interval(dunster) %>%
-      filter(percentile %in% c(.025, .975)) %>%
-      pull(case_when(
+      geom_vline(xintercept = leverett_conf.int[1]) + 
+      geom_vline(xintercept = leverett_conf.int[2]) + 
+      geom_vline(xintercept = base_leverett %>% pull(case_when(
         input$variable2 == "prop_international" ~ prop_international,
         input$variable2 == "prop_varsity" ~ prop_varsity,
         input$variable2 == "prop_legacy" ~ prop_legacy,
         input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-        input$variable2 == "prop_group_size" ~ prop_group_size))
+        input$variable2 == "prop_group_size" ~ prop_group_size)
+      ), color = "blue") +
+        theme_classic()
+      
+    dunster_conf.int <- confidence_interval_pivoted("dunster") %>%
+      filter(percentile %in% c(.025, .975)) %>%
+      pull_desired(., input$variable2)
     
    dunster_graph <- ggplot(dunster, aes(x = case_when(
       input$variable2 == "prop_international" ~ prop_international,
       input$variable2 == "prop_varsity" ~ prop_varsity,
       input$variable2 == "prop_legacy" ~ prop_legacy,
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-      input$variable2 == "prop_group_size" ~ prop_group_size))) + 
-      geom_histogram() + 
+      input$variable2 == "prop_group_size" ~ prop_group_size))) +
+     geom_histogram(binwidth = case_when(
+       input$variable2 != "prop_group_size" ~ .01,
+       TRUE ~ .25)) +
      labs(x = xlabel, 
+          y = ylabel,
           title = "Dunster") + 
+     geom_vline(xintercept = dunster_conf.int[1]) + 
+     geom_vline(xintercept = dunster_conf.int[2]) + 
+     geom_vline(xintercept = base_dunster %>% pull(case_when(
+       input$variable2 == "prop_international" ~ prop_international,
+       input$variable2 == "prop_varsity" ~ prop_varsity,
+       input$variable2 == "prop_legacy" ~ prop_legacy,
+       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
+       input$variable2 == "prop_group_size" ~ prop_group_size)
+     ), color = "blue") +
       theme_classic()
     
-    eliot_conf.int <- confidence_interval(eliot) %>%
+    eliot_conf.int <- confidence_interval_pivoted("eliot") %>%
       filter(percentile %in% c(.025, .975)) %>%
       pull(case_when(
         input$variable2 == "prop_international" ~ prop_international,
@@ -436,13 +440,25 @@ server <- function(input, output) {
       input$variable2 == "prop_varsity" ~ prop_varsity,
       input$variable2 == "prop_legacy" ~ prop_legacy,
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-      input$variable2 == "prop_group_size" ~ prop_group_size))) + 
-      geom_histogram() + 
+      input$variable2 == "prop_group_size" ~ prop_group_size))) +
+      geom_histogram(binwidth = case_when(
+        input$variable2 != "prop_group_size" ~ .01,
+        TRUE ~ .25)) +
       labs(x = xlabel, 
+           y = ylabel,
            title = "Eliot") + 
+      geom_vline(xintercept = eliot_conf.int[1]) + 
+      geom_vline(xintercept = eliot_conf.int[2]) + 
+      geom_vline(xintercept = base_eliot %>% pull(case_when(
+        input$variable2 == "prop_international" ~ prop_international,
+        input$variable2 == "prop_varsity" ~ prop_varsity,
+        input$variable2 == "prop_legacy" ~ prop_legacy,
+        input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable2 == "prop_group_size" ~ prop_group_size)
+      ), color = "blue") +
       theme_classic()
     
-    kirkland_conf.int <- confidence_interval(kirkland) %>%
+    kirkland_conf.int <- confidence_interval_pivoted("kirkland") %>%
       filter(percentile %in% c(.025, .975)) %>%
       pull(case_when(
         input$variable2 == "prop_international" ~ prop_international,
@@ -456,32 +472,57 @@ server <- function(input, output) {
       input$variable2 == "prop_varsity" ~ prop_varsity,
       input$variable2 == "prop_legacy" ~ prop_legacy,
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-      input$variable2 == "prop_group_size" ~ prop_group_size))) + 
-      geom_histogram() + 
+      input$variable2 == "prop_group_size" ~ prop_group_size))) +
+        geom_histogram(binwidth = case_when(
+          input$variable2 != "prop_group_size" ~ .01,
+          TRUE ~ .25)) +
       labs(x = xlabel, 
+           y = ylabel,
            title = "Kirkland") + 
+      geom_vline(xintercept = kirkland_conf.int[1]) + 
+      geom_vline(xintercept = kirkland_conf.int[2]) + 
+      geom_vline(xintercept = base_kirkland %>% pull(case_when(
+        input$variable2 == "prop_international" ~ prop_international,
+        input$variable2 == "prop_varsity" ~ prop_varsity,
+        input$variable2 == "prop_legacy" ~ prop_legacy,
+        input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable2 == "prop_group_size" ~ prop_group_size)
+      ), color = "blue") +
       theme_classic()
-    
-    # 
-    # winthrop_conf.int <- confidence_interval(winthrop) %>%
-    #   filter(percentile %in% c(.025, .975)) %>%
-    #   pull(case_when(
-    #     input$variable == "prop_international" ~ prop_international,
-    #     input$variable == "prop_varsity" ~ prop_varsity,
-    #     input$variable == "prop_legacy" ~ prop_legacy,
-    #     input$variable == "prop_financial_aid" ~ prop_financial_aid,
-    #     input$variable == "prop_group_size" ~ prop_group_size))
-    # 
-    # winthrop_graph <- ggplot(winthrop, aes(x = case_when(
-    #   input$variable == "prop_international" ~ prop_international,
-    #   input$variable == "prop_varsity" ~ prop_varsity,
-    #   input$variable == "prop_legacy" ~ prop_legacy,
-    #   input$variable == "prop_financial_aid" ~ prop_financial_aid,
-    #   input$variable == "prop_group_size" ~ prop_group_size))) + 
-    #   geom_histogram() + 
-    #   theme_classic()
-    # 
-    adams_conf.int <- confidence_interval(adams) %>%
+
+    winthrop_conf.int <- confidence_interval_pivoted("winthrop") %>%
+      filter(percentile %in% c(.025, .975)) %>%
+      pull(case_when(
+        input$variable2 == "prop_international" ~ prop_international,
+        input$variable2 == "prop_varsity" ~ prop_varsity,
+        input$variable2 == "prop_legacy" ~ prop_legacy,
+        input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable2 == "prop_group_size" ~ prop_group_size))
+
+    winthrop_graph <- ggplot(winthrop, aes(x = case_when(
+      input$variable2 == "prop_international" ~ prop_international,
+      input$variable2 == "prop_varsity" ~ prop_varsity,
+      input$variable2 == "prop_legacy" ~ prop_legacy,
+      input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
+      input$variable2 == "prop_group_size" ~ prop_group_size))) +
+      geom_histogram(binwidth = case_when(
+        input$variable2 != "prop_group_size" ~ .01,
+        TRUE ~ .25)) +
+      labs(x = xlabel, 
+           y = ylabel,
+           title = "Winthrop") +
+      geom_vline(xintercept = winthrop_conf.int[1]) + 
+      geom_vline(xintercept = winthrop_conf.int[2]) + 
+      geom_vline(xintercept = base_winthrop %>% pull(case_when(
+        input$variable2 == "prop_international" ~ prop_international,
+        input$variable2 == "prop_varsity" ~ prop_varsity,
+        input$variable2 == "prop_legacy" ~ prop_legacy,
+        input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable2 == "prop_group_size" ~ prop_group_size)
+      ), color = "blue") +
+      theme_classic()
+
+    adams_conf.int <- confidence_interval_pivoted("adams") %>%
       filter(percentile %in% c(.025, .975)) %>%
       pull(case_when(
         input$variable2 == "prop_international" ~ prop_international,
@@ -495,13 +536,25 @@ server <- function(input, output) {
       input$variable2 == "prop_varsity" ~ prop_varsity,
       input$variable2 == "prop_legacy" ~ prop_legacy,
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-      input$variable2 == "prop_group_size" ~ prop_group_size))) + 
-      geom_histogram() + 
+      input$variable2 == "prop_group_size" ~ prop_group_size)))  +
+      geom_histogram(binwidth = case_when(
+        input$variable2 != "prop_group_size" ~ .01,
+        TRUE ~ .25)) +
       labs(x = xlabel, 
+           y = ylabel,
            title = "Adams") + 
+      geom_vline(xintercept = adams_conf.int[1]) + 
+      geom_vline(xintercept = adams_conf.int[2]) + 
+      geom_vline(xintercept = base_adams %>% pull(case_when(
+        input$variable2 == "prop_international" ~ prop_international,
+        input$variable2 == "prop_varsity" ~ prop_varsity,
+        input$variable2 == "prop_legacy" ~ prop_legacy,
+        input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable2 == "prop_group_size" ~ prop_group_size)
+      ), color = "blue") +
       theme_classic()
     
-    lowell_conf.int <- confidence_interval(lowell) %>%
+    lowell_conf.int <- confidence_interval_pivoted("lowell") %>%
       filter(percentile %in% c(.025, .975)) %>%
       pull(case_when(
         input$variable2 == "prop_international" ~ prop_international,
@@ -515,14 +568,26 @@ server <- function(input, output) {
       input$variable2 == "prop_varsity" ~ prop_varsity,
       input$variable2 == "prop_legacy" ~ prop_legacy,
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-      input$variable2 == "prop_group_size" ~ prop_group_size))) + 
-      geom_histogram() + 
+      input$variable2 == "prop_group_size" ~ prop_group_size))) +
+      geom_histogram(binwidth = case_when(
+        input$variable2 != "prop_group_size" ~ .01,
+        TRUE ~ .25)) +
+      geom_vline(xintercept = lowell_conf.int[1]) + 
+      geom_vline(xintercept = lowell_conf.int[2]) + 
+      geom_vline(xintercept = base_lowell %>% pull(case_when(
+        input$variable2 == "prop_international" ~ prop_international,
+        input$variable2 == "prop_varsity" ~ prop_varsity,
+        input$variable2 == "prop_legacy" ~ prop_legacy,
+        input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable2 == "prop_group_size" ~ prop_group_size)
+      ), color = "blue") +
       labs(x = xlabel, 
+           y = ylabel,
            title = "Lowell") + 
       theme_classic()
     
     
-    quincy_conf.int <- confidence_interval(quincy) %>%
+    quincy_conf.int <- confidence_interval_pivoted("quincy") %>%
       filter(percentile %in% c(.025, .975)) %>%
       pull(case_when(
         input$variable2 == "prop_international" ~ prop_international,
@@ -537,19 +602,66 @@ server <- function(input, output) {
       input$variable2 == "prop_varsity" ~ prop_varsity,
       input$variable2 == "prop_legacy" ~ prop_legacy,
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
-      input$variable2 == "prop_group_size" ~ prop_group_size))) + 
-      geom_histogram() + 
+      input$variable2 == "prop_group_size" ~ prop_group_size)))  +
+      geom_histogram(binwidth = case_when(
+        input$variable2 != "prop_group_size" ~ .01,
+        TRUE ~ .25)) +
       labs(x = xlabel,
+           y = ylabel,
            title = "Quincy") + 
+      geom_vline(xintercept = quincy_conf.int[1]) + 
+      geom_vline(xintercept = quincy_conf.int[2]) + 
+      geom_vline(xintercept = base_quincy %>% pull(case_when(
+        input$variable2 == "prop_international" ~ prop_international,
+        input$variable2 == "prop_varsity" ~ prop_varsity,
+        input$variable2 == "prop_legacy" ~ prop_legacy,
+        input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
+        input$variable2 == "prop_group_size" ~ prop_group_size)
+      ), color = "blue") +
       theme_classic()
     
+    if(input$variable2 != "prop_group_size"){
+      
+      cabot_graph <- cabot_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      currier_graph <- currier_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      pfoho_graph <- pfoho_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      adams_graph <- adams_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      lowell_graph <- lowell_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      quincy_graph <- quincy_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      eliot_graph <- eliot_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      winthrop_graph <- winthrop_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      kirkland_graph <- kirkland_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      mather_graph <- mather_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      dunster_graph <- dunster_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      leverett_graph <- leverett_graph + scale_x_continuous(limits = xscale, labels = scales::percent)
+      
+    }
+    
+    else{
+      cabot_graph <- cabot_graph + scale_x_continuous(limits = xscale)
+      currier_graph <- currier_graph + scale_x_continuous(limits = xscale)
+      pfoho_graph <- pfoho_graph + scale_x_continuous(limits = xscale)
+      adams_graph <- adams_graph + scale_x_continuous(limits = xscale)
+      lowell_graph <- lowell_graph + scale_x_continuous(limits = xscale)
+      quincy_graph <- quincy_graph + scale_x_continuous(limits = xscale)
+      eliot_graph <- eliot_graph + scale_x_continuous(limits = xscale)
+      winthrop_graph <- winthrop_graph + scale_x_continuous(limits = xscale)
+      kirkland_graph <- kirkland_graph + scale_x_continuous(limits = xscale)
+      mather_graph <- mather_graph + scale_x_continuous(limits = xscale)
+      dunster_graph <- dunster_graph + scale_x_continuous(limits = xscale)
+      leverett_graph <- leverett_graph + scale_x_continuous(limits = xscale)
+    }
+    
     plot_grid(currier_graph, cabot_graph, pfoho_graph,
-              eliot_graph, kirkland_graph,
+              eliot_graph, kirkland_graph, winthrop_graph,
               mather_graph, dunster_graph, leverett_graph,
-              adams_graph, quincy_graph, lowell_graph, scale)
+              adams_graph, quincy_graph, lowell_graph, nrow = 4, ncol = 3)
+    
   })
   
-}
+  }
+
+
 
 shinyApp(ui, server)
 

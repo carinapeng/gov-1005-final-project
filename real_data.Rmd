@@ -23,17 +23,13 @@ library(googlesheets4)
 ```{r}
 # reads in from the "first_years"
 # google sheet in the project drive
-
 sheets_deauth()
   
 ss1 <- 'https://docs.google.com/spreadsheets/d/1edQVynHA0j7Dnnth8qTvQtmS3ww768lyl4pyPC8XPoE/edit?usp=sharing'
-
 official_housing <- read_sheet(ss1) 
-
 ```
 
 ```{r all_communities}
-
 # creates a tibble of all communities (neighborhoods AND houses)
 # n times where n represents the number of reps in the rep_sample_n.
 # This tibble is then used to generate summary statistics for 
@@ -42,7 +38,6 @@ official_housing <- read_sheet(ss1)
 #
 # This tibble can be filtered down for any desired sub communities
 # as done in later r code chunks
-
 all_communities <- official_housing %>% 
   
   # 1) take the sheet of freshman and nest
@@ -79,58 +74,30 @@ all_communities <- official_housing %>%
   mutate(currier = map(data, ~overview(assigned = ., community = 'Currier'))) %>% 
   mutate(pforzheimer = map(data, ~overview(assigned = ., community = 'Pforzheimer'))) %>% 
   mutate(cabot = map(data, ~overview(assigned = ., community = 'Cabot'))) 
-
 ```
 
 ```{r neighborhoods}
-
 # generates summary statistics for neighborhoods
-
 neighborhoods <- all_communities %>% 
   select(river_central, river_east, river_west, quad) 
-
 river_central <- all_communities %>% 
   select(river_central) %>% 
   unnest(river_central)
-
 river_east <- all_communities %>% 
   select(river_east) %>% 
   unnest(river_east)
-
 river_west <- all_communities %>% 
   select(river_west) %>% 
   unnest(river_west)
-
 river <- all_communities %>% 
   select(river) %>% 
   unnest(river)
-
 quad <- all_communities %>% 
   select(quad) %>% 
   unnest(quad)
 ```
 
-```{r analysis}
-
-river
-quad
-
-# use a chisq.test(x = a numeric vector or matrix,
-#                  y = a vector, ignored if x is a matrix)
-
-```
-
-
-
-```{r saveRDS}
+```{r RDS}
 
 saveRDS(object = all_communities, file = "shiny_app/base_data.RDS")
-saveRDS(object = river_central, file = "shiny_app/base_river_central.RDS")
-saveRDS(object = river_east, file = "shiny_app/base_river_east.RDS")
-saveRDS(object = river_west, file = "shiny_app/base_river_west.RDS")
-saveRDS(object = river, file = "shiny_app/base_river.RDS")
-saveRDS(object = quad, file = "shiny_app/base_quad.RDS")
-
 ```
-
-
