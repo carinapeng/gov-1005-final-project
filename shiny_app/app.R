@@ -46,7 +46,7 @@ base_kirkland <- base_data %>% select(kirkland) %>% unnest(kirkland)
 base_winthrop <- base_data %>% select(winthrop) %>% unnest(winthrop)
 
 ethnicity <- readRDS("ethnicity_results.RDS")
-gender_results <- readRDS("gender_results.RDS")
+gender <- readRDS("gender_results.RDS")
 
 #Confidence interval function
 
@@ -135,9 +135,12 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                             )),
                 tabPanel("Trends",
                          titlePanel("Self Segregation"),
-                         p("We wanted to investigate..."),
-                         plotOutput("segregationGraphs")) %>%
+                         p("We wanted to investigate whether students self-segregated during the blocking process. Our first analysis, conducted below, shows that there is some degree of self-segregation. Of all the blocking groups that contained at least one Asian student, more than twenty percent of them were comprised entirely of Asian students. On the other hand, less than ten percent of the blocking groups that contained white students were entirely white."),
+                         plotOutput("segregationGraphs") %>%
                   withSpinner(color="#0dc5c1"),
+                  p("We also investigated Gender and found segregation occured in that realm also. 40 percent of blocking groups that contained a member of one gender were comprised entirely of that gender, a trend that was found in both the male and female genders."),
+                  plotOutput("genderGraphs") %>%
+                    withSpinner(color="#0dc5c1")),
                  tabPanel("Discussion",
                           titlePanel("Conclusions from Fake Data"),
                           p("A huge wrench was thrown into our data collection with the coronavirus evacuation. We are currently working on acquiring data in spite of this disruption.
@@ -584,18 +587,65 @@ server <- function(input, output) {
   
   output$segregationGraphs <- renderPlot({
     
-    asians <- ggplot(ethnicity, aes(x = prop_asian)) + geom_histogram()
+    asians <- ggplot(ethnicity%>%filter(prop_asian >0) %>% count(prop_asian), aes(x = prop_asian, y = n/46)) +
+      geom_col(width = .05) +
+      scale_x_continuous(limits = c(.1, 1.1), breaks = c(.1, .2, .3, .4, .5, .6, .7, .8, .9, 1), labels = scales::percent) +
+      scale_y_continuous(limits = c(0, .23), labels = scales::percent) +
+      labs(x = "Percentage of Asian students within blocking group", 
+           y = "Percentage of Blocking Groups",
+           title = "Composition of Blocking Groups containing Asian students",
+           subtitle = "46 blocking groups contained at least one Asian student") +
+      theme_classic()
     
-    whites <- ggplot(ethnicity, aes(x = prop_white)) + geom_histogram()
+    
+    whites <- ggplot(ethnicity%>%filter(prop_white >0) %>% count(prop_white), aes(x = prop_white, y = n/57)) +
+      geom_col(width = .05) +
+      scale_x_continuous(limits = c(.1, 1.1), breaks = c(.1, .2, .3, .4, .5, .6, .7, .8, .9, 1), labels = scales::percent) +
+      scale_y_continuous(limits = c(0, .23), labels = scales::percent) +
+      labs(x = "Percentage of White students within blocking group", 
+           y = "Percentage of Blocking Groups",
+           title = "Composition of Blocking Groups containing White students",
+           subtitle = "57 blocking groups contained at least one White student") +
+      theme_classic()
     
     plot_grid(asians, whites)
     
     
   })
   
+  output$genderGraphs <- renderPlot({
+    
+    females <- ggplot(gender %>% filter(prop_female > 0) %>% count(prop_female), aes(x=prop_female, y = n/55)) + 
+      geom_col(width = .05) + 
+      scale_x_continuous(limits = c(.1, 1.1), breaks = c(.1, .2, .3, .4, .5, .6, .7, .8, .9, 1), labels = scales::percent) +
+      scale_y_continuous(limits = c(0, .5), labels = scales::percent) +
+      labs(x = "Percentage of female students within blocking group", 
+           y = "Percentage of Blocking Groups",
+           title = "Composition of Blocking Groups containing female students",
+           subtitle = "55 blocking groups contained at least one female student") +
+      theme_classic() 
+    
+    males <- ggplot(gender %>% filter(prop_male > 0) %>% count(prop_male), aes(x=prop_male, y = n/49)) + 
+      geom_col(width = .05) + 
+      scale_x_continuous(limits = c(.1, 1.1), breaks = c(.1, .2, .3, .4, .5, .6, .7, .8, .9, 1), labels = scales::percent) +
+      scale_y_continuous(limits = c(0, .5), labels = scales::percent) +
+      labs(x = "Percentage of male students within blocking group", 
+           y = "Percentage of Blocking Groups",
+           title = "Composition of Blocking Groups containing male students",
+           subtitle = "49 blocking groups contained at least one mmale student") +
+      theme_classic() 
+    
+    plot_grid(females, males)
+                    
+  })
+  
+  
   
   }
-
+  
+  
+  
+  
 
 shinyApp(ui, server)
 
