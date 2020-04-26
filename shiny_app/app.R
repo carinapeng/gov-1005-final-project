@@ -8,14 +8,42 @@ library(skimr)
 library(patchwork)
 library(shinycssloaders)
 library(cowplot)
+library(gifski)
+library(png)
 
 # READING IN DATA FILES
 
+#Data we cleaned and collected:
+
+official_housing <- readRDS("official_housing.RDS")
+
+#Pivoted dataset that excludes data and assigned for the purpose of saving space.
+
 simplified <- readRDS("simplified.RDS")
 
+#Actual data we collected.
+
 base_data <- readRDS("base_data.RDS") %>% ungroup()
+
+#And that data pivoted.
+
 base_data_pivoted <- base_data %>% 
   pivot_longer(-data, names_to = "community", values_to = "demographics")
+
+#Reading in the files for crimson comparison:
+
+crim_athletes <- readRDS("crimson_comparison/crim_athletes")
+crim_ethnicity <- readRDS("crimson_comparison/crim_ethnicity")
+crim_finaid <- readRDS("crimson_comparison/crim_finaid")
+crim_gender <- readRDS("crimson_comparison/crim_gender")
+crim_international <- readRDS("crimson_comparison/crim_international")
+crim_legacy <- readRDS("crimson_comparison/crim_legacy")
+our_athlete <- readRDS("crimson_comparison/our_athletes")
+our_ethnicity <- readRDS("crimson_comparison/our_ethnicity")
+our_finaid <- readRDS("crimson_comparison/our_finaid")
+our_gender <- readRDS("crimson_comparison/our_gender")
+our_international <- readRDS("crimson_comparison/our_international")
+our_legacy <- readRDS("crimson_comparison/our_legacy")
 
 #CREATING COMMUNITIES THAT ARE FILTERED BY HOUSE TO MAKE THE PROCESS QUICKER
 
@@ -45,12 +73,17 @@ base_eliot <- base_data %>% select(eliot) %>% unnest(eliot)
 base_kirkland <- base_data %>% select(kirkland) %>% unnest(kirkland)
 base_winthrop <- base_data %>% select(winthrop) %>% unnest(winthrop)
 
-ethnicity <- readRDS("ethnicity_results.RDS")
+#For investigation into gender and ethnicity
+
+ethnicities <- readRDS("ethnicity_results.RDS")
 gender <- readRDS("gender_results.RDS")
 
-#Confidence interval function
+#Staying with suite mates against size of frosh dorm
 
-#LIMIT TO THE VARIABLES WE'RE CHOOSING TO DO
+suitemate_size_relationship <- readRDS("suitemate_size_relationship.RDS")
+varsity_per_block <- readRDS("varsity_per_block.RDS")
+
+#Confidence interval function that accomodates for pivoted data
 
 confidence_interval_pivoted <- function(section, lower_percentile = 0.025, median = 0.5, upper_percentile = 0.975){
   
@@ -75,6 +108,8 @@ confidence_interval_pivoted <- function(section, lower_percentile = 0.025, media
   
 }
 
+#To speed things up with inputSelect
+
 pull_desired <- function(data, variable){
   
   pull(data, case_when(
@@ -86,14 +121,72 @@ pull_desired <- function(data, variable){
   
 }
 
+#For pie chart
+prop <- function(list1,list2) {
+  length(list1)/length(list2)
+}
+
+create_pie <- function(data, title) {
+  data %>%
+    arrange(desc(Type)) %>%
+    mutate(lab.ypos = cumsum(Percentage) - 0.5*Percentage) %>%
+    ggplot(aes(x = 2, y = Percentage, fill = Type)) +
+    geom_bar(stat="identity", color = "white") +
+    coord_polar(theta = "y", start = 0)+
+    geom_text(aes( y = lab.ypos, label = paste(Percentage, "%")), color = "Black")+
+    theme_void()+
+    labs(title = title,
+         fill = NULL) +
+    xlim(.5, 2.5)
+}
+
+
+ethnicity <- function(community) {
+  w <- which(grepl("White", community$ethnicity))
+  a <- which(grepl("Asian", community$ethnicity))
+  b <- which(grepl("Black", community$ethnicity))
+  hl <- which(grepl("Hispanic/Latinx", community$ethnicity))
+  mena <- which(grepl("Middle Eastern/North African", community$ethnicity))
+  indna <- which(grepl("Indigenous/Native American", community$ethnicity))
+  eth_pref <- which(grepl("Prefer not to say", community$ethnicity))
+  total_ethnicity = c(w, a, b, hl, mena, indna, eth_pref)
+  
+  prop_ethnicity_tibble <- tibble(
+    prop_white = prop(w, total_ethnicity),
+    prop_asian = prop(a, total_ethnicity),
+    prop_black = prop(b, total_ethnicity),
+    prop_hl = prop(hl, total_ethnicity),
+    prop_mena = prop(mena, total_ethnicity),
+    prop_indna = prop(indna, total_ethnicity),
+    prop_eth_pref = prop(eth_pref, total_ethnicity)
+  )
+  
+  prop_ethnicity_tibble
+}
+
+
 
 ui <- navbarPage(theme = shinytheme("darkly"),
                  "Blocking Project",
+                 tabPanel("Data Validation",
+                          "Our Data's Demographics Vs The Crimson's Demographics",
+                          selectInput("type",
+                                      label = "Demographic to compare",
+                                      choices = c("International Students" = "International",
+                                                  "Athletes" = "Athlete",
+                                                  "Legacy Students" = "Legacy",
+                                                  "Financial Aid Students" = "Financial Aid",
+                                                  "Ethnicity Distributions" = "Ethnicity",
+                                                  "Gender Distributions" = "Gender")
+                          ),
+                          mainPanel(
+                            plotOutput("ValGraphs", width = "140%")
+                          )),
                  tabPanel("Comparisons",
                           navlistPanel(
                             tabPanel("Comparisons Across Neighborhoods",
                                      selectInput("neighborhood_1", 
-                                                 label = "Graph 1",
+                                                 label = "Left-hand Graph",
                                                  choices = c("River West" = "river_west",
                                                              "River Central" = "river_central",
                                                              "River East" = "river_east",
@@ -102,7 +195,7 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                                                  selected = "river_east",
                                      ),
                                      selectInput("neighborhood_2",
-                                                 label = "Graph 2",
+                                                 label = "Right-hand Graph",
                                                  choices = c("River West" = "river_west",
                                                              "River Central" = "river_central",
                                                              "River East" = "river_east",
@@ -110,23 +203,24 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                                                              "Quad" = "quad")),
                                      selectInput("variable", 
                                                  label = "Variable Displayed",
-                                                 choices = c("International" = "prop_international",
-                                                             "Varsity" = "prop_varsity",
-                                                             "Legacy" = "prop_legacy",
-                                                             "Financial Aid" = "prop_financial_aid",
-                                                             "Blocking Group Size" = "prop_group_size")),
+                                                 choices = c("International Students" = "prop_international",
+                                                             "Varsity Students" = "prop_varsity",
+                                                             "Legacy Students" = "prop_legacy",
+                                                             "Financial Aid Students" = "prop_financial_aid",
+                                                             "Blocking Group Sizes" = "prop_group_size")),
                                      mainPanel(
+                                       p("Blue bars represent the actual values we calculated through data collection, while the black bars represent 95% confidence intervals we calculated by running 500 replicates of a randomized housing day."),
                                        plotOutput("graphsTogether", width = "150%") %>%
                                          withSpinner(color="#0dc5c1")
                                      )),
                             tabPanel("Comparisons Across Houses",
                                      selectInput("variable2",
                                                  label = "Variable Displayed",
-                                                 choices = c("International" = "prop_international",
-                                                             "Varsity" = "prop_varsity",
-                                                             "Legacy" = "prop_legacy",
-                                                             "Financial Aid" = "prop_financial_aid",
-                                                             "Blocking Group Size" = "prop_group_size")
+                                                 choices = c("International Students" = "prop_international",
+                                                             "Varsity Athletes" = "prop_varsity",
+                                                             "Legacy with Legacy" = "prop_legacy",
+                                                             "Students on Financial Aid" = "prop_financial_aid",
+                                                             "Blocking Group Sizes" = "prop_group_size")
                                      ),
                                      mainPanel(
                                        plotOutput("allHouses", width = "140%") %>%
@@ -134,13 +228,25 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                                      ))
                             )),
                 tabPanel("Trends",
-                         titlePanel("Self Segregation"),
+                         
+                         navlistPanel(
+                           tabPanel("Self Segregation",
+                         titlePanel("Race"),
                          p("We wanted to investigate whether students self-segregated during the blocking process. Our first analysis, conducted below, shows that there is some degree of self-segregation. Of all the blocking groups that contained at least one Asian student, more than twenty percent of them were comprised entirely of Asian students. On the other hand, less than ten percent of the blocking groups that contained white students were entirely white."),
                          plotOutput("segregationGraphs") %>%
                   withSpinner(color="#0dc5c1"),
-                  p("We also investigated Gender and found segregation occured in that realm also. 40 percent of blocking groups that contained a member of one gender were comprised entirely of that gender, a trend that was found in both the male and female genders."),
+                  titlePanel("Gender"),
+                  p("
+                    We also investigated Gender distribution across blocking groups and found segregation occured in that realm also. 40 percent of blocking groups that contained a member of one gender were comprised entirely of that gender, a trend that was found in both the male and female genders."),
                   plotOutput("genderGraphs") %>%
                     withSpinner(color="#0dc5c1")),
+                  tabPanel("Correlations",
+                             titlePanel("Blocking with your Suitemates"),
+                                      p("hm"),
+                                     plotOutput("suitemateSizeRelationship") %>% 
+                                       withSpinner(color="#0dc5c1")),
+                  tabPanel("Miscellaneous",
+                  plotOutput("varsityPerBlock") %>% withSpinner(color="#0dc5c1")))),
                  tabPanel("Discussion",
                           titlePanel("Conclusions from Fake Data"),
                           p("A huge wrench was thrown into our data collection with the coronavirus evacuation. We are currently working on acquiring data in spite of this disruption.
@@ -164,6 +270,44 @@ All Sensitive questions have a “prefer not to answer” option."),
 
 server <- function(input, output) {
   
+  
+  output$ValGraphs <- renderPlot({
+    
+    type <- case_when(
+      input$type == "International" ~ 1,
+      input$type == "Athlete" ~ 2,
+      input$type == "Legacy" ~ 3,
+      input$type == "Financial Aid" ~ 4,
+      input$type == "Ethnicity" ~ 5,
+      input$type == "Gender" ~ 6) 
+    
+    if(type == 1) {
+      our_graph <- create_pie(our_international, "Our Data")
+      crim_graph <- create_pie(crim_international, "Crimson Data")
+    } else if (type == 2) {
+      our_graph <- create_pie(our_athlete, "Our Data")
+      crim_graph <- create_pie(crim_athlete, "Crimson Data") +
+        labs(caption = "Crimson Athlete data only includes recruited student athletes.* 
+This likely causes the discrepancy seen here.")     
+    } else if (type == 3) {
+      our_graph <- create_pie(our_legacy, "Our Data")
+      crim_graph <- create_pie(crim_legacy, "CrimsonData") +
+        labs(caption = "Crimson Legacy data includes all relatives, including siblings.* 
+This likely causes the discrepancy seen here.")
+    } else if (type == 4) {
+      our_graph <- create_pie(our_finaid, "Our Data")
+      crim_graph <- create_pie(crim_finaid, "Crimson Data")      
+    } else if (type == 5) {
+      our_graph <- create_pie(our_ethnicity, "Our Data") + scale_fill_manual(values=c("#F8766D", "#B79F00", "#00BA38", "#00BFC4", "#7732a8", "#F564E3"))
+      crim_graph <- create_pie(crim_ethnicity, "Crimson Data")      
+    } else if (type == 6) {
+      our_graph <- create_pie(our_gender, "Our Data")
+      crim_graph <- create_pie(crim_gender, "Crimson Data")      
+    }
+    
+    plot_grid(our_graph, crim_graph)  
+    
+  }) 
   
   
   output$graphsTogether <- renderPlot({
@@ -216,7 +360,7 @@ server <- function(input, output) {
     
     graph1 <- 
       ggplot(filtered1, aes(x = prop)) +
-      geom_histogram(aes(x = prop, y = ..density..), binwidth = case_when(
+      geom_histogram(binwidth = case_when(
         input$variable != "prop_group_size" ~ .01,
         TRUE ~ .25)) +
       geom_vline(xintercept  = conf.int1[1]) + 
@@ -244,7 +388,7 @@ server <- function(input, output) {
     
     
     graph2 <- ggplot(filtered2, aes(x = prop)) +
-      geom_histogram(aes(x = prop, y = ..density..), binwidth = case_when(
+      geom_histogram(binwidth = case_when(
         input$variable != "prop_group_size" ~ .01,
         TRUE ~ .25)) +
       geom_vline(xintercept  = conf.int2[1]) + 
@@ -269,7 +413,6 @@ server <- function(input, output) {
     else{
       graph2 <- graph2 + scale_x_continuous(limits = xscale)
     }
-    
     
     plot_grid(graph1, graph2)
     
@@ -587,7 +730,7 @@ server <- function(input, output) {
   
   output$segregationGraphs <- renderPlot({
     
-    asians <- ggplot(ethnicity%>%filter(prop_asian >0) %>% count(prop_asian), aes(x = prop_asian, y = n/46)) +
+    asians <- ggplot(ethnicities %>% filter(prop_asian > 0) %>% count(prop_asian), aes(x = prop_asian, y = n/46)) +
       geom_col(width = .05) +
       scale_x_continuous(limits = c(.1, 1.1), breaks = c(.1, .2, .3, .4, .5, .6, .7, .8, .9, 1), labels = scales::percent) +
       scale_y_continuous(limits = c(0, .23), labels = scales::percent) +
@@ -597,8 +740,7 @@ server <- function(input, output) {
            subtitle = "46 blocking groups contained at least one Asian student") +
       theme_classic()
     
-    
-    whites <- ggplot(ethnicity%>%filter(prop_white >0) %>% count(prop_white), aes(x = prop_white, y = n/57)) +
+    whites <- ggplot(ethnicities%>%filter(prop_white > 0) %>% count(prop_white), aes(x = prop_white, y = n/57)) +
       geom_col(width = .05) +
       scale_x_continuous(limits = c(.1, 1.1), breaks = c(.1, .2, .3, .4, .5, .6, .7, .8, .9, 1), labels = scales::percent) +
       scale_y_continuous(limits = c(0, .23), labels = scales::percent) +
@@ -639,11 +781,38 @@ server <- function(input, output) {
                     
   })
   
+  output$whereDoTheyGo <- renderPlot({
+    
+    
+    
+  })
+  
+  output$suitemateSizeRelationship <- renderPlot({
   
   
-  }
+  suitemate_size_relationship %>%
+    ggplot(aes(x = size, y = perc_blockwithsuite))+geom_point() +
+    geom_smooth(method = "lm", se = F) + 
+      labs(x = "Size of Freshman Dorm",
+           y = "Percentage of blocking groups containing 2+ suitemates from dorm") +
+      scale_y_continuous(labels = scales::percent) +
+      theme_classic()
+  })
+
+  
+  output$varsityPerBlock <- renderPlot({
+    
+    ggplot(varsity_per_block, aes(x = fct_reorder(house, (average_varsity)), y = average_varsity)) +
+      geom_col() + 
+      labs(x = "House Placement",
+           y = "Average Varsity athletes per blocking group") +
+      theme_classic()
+  })
   
   
+}
+#   
+# animate(plot, renderer = ffmpeg_renderer())
   
   
 
