@@ -1,6 +1,6 @@
 ---
 title: "functions"
-author: "Jamal Nimer"
+author: "Jamal Nimer, Lucy He, Austin Li"
 date: "4/21/2020"
 output: html_document
 ---
