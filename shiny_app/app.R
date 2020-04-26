@@ -326,7 +326,7 @@ This likely causes the discrepancy seen here.")
     
     xscale <- case_when(
       input$variable == "prop_international" ~ c(.05, .25),
-      input$variable == "prop_varsity" ~ c(.10, .3),
+      input$variable == "prop_varsity" ~ c(.10, .25),
       input$variable == "prop_legacy" ~ c(.1, .25),
       input$variable == "prop_financial_aid" ~ c(.5, .8),
       input$variable == "prop_group_size" ~ c(5, 7)
