@@ -1,4 +1,4 @@
-# gov-1005-final-project
+# harvard-housing
 Housing Project 2020
 
 This project takes a look at the Harvard housing system to determine whether or not Harvard's housing process is "fair."
