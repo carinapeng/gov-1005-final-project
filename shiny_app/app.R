@@ -166,12 +166,12 @@ ethnicity <- function(community) {
 
 
 
-ui <- navbarPage(theme = shinytheme("darkly"),
+ui <- navbarPage(theme = shinytheme("simplex"),
                  "Blocking Project",
                  tabPanel("Data Validation",
-                          "Our Data's Demographics Vs The Crimson's Demographics",
+                          "Side-by-side comparison of our data's demographics vs The Crimson emographics",
                           selectInput("type",
-                                      label = "Demographic to compare",
+                                      label = "Select a distribution to compare:",
                                       choices = c("International Students" = "International",
                                                   "Athletes" = "Athlete",
                                                   "Legacy Students" = "Legacy",
@@ -179,6 +179,7 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                                                   "Ethnicity Distributions" = "Ethnicity",
                                                   "Gender Distributions" = "Gender")
                           ),
+                          p("To gauge how representative of the class of 2023 our collected data was, we compared the demographics of our collected data to the official demographics that the Harvard Crimson tabulates annually. Click the dropdown menu to see how our data stacks up against the Crimson's for international student, ethnicity, financial aid, gender, legacy student, and varsity athete composition of the class of 2023."),
                           mainPanel(
                             plotOutput("ValGraphs", width = "140%")
                           )),
@@ -209,7 +210,7 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                                                              "Financial Aid Students" = "prop_financial_aid",
                                                              "Blocking Group Sizes" = "prop_group_size")),
                                      mainPanel(
-                                       p("Blue bars represent the actual values we calculated through data collection, while the black bars represent 95% confidence intervals we calculated by running 500 replicates of a randomized housing day."),
+                                       p("Pick two neighborhoods (we added the River as a section for your convenience) and a variable to view a side-by-side comparison! Blue bars represent the actual values we calculated through data collection, while the black bars represent 95% confidence intervals we calculated by running 500 replicates of a randomized housing day."),
                                        plotOutput("graphsTogether", width = "150%") %>%
                                          withSpinner(color="#0dc5c1")
                                      )),
@@ -218,60 +219,55 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                                                  label = "Variable Displayed",
                                                  choices = c("International Students" = "prop_international",
                                                              "Varsity Athletes" = "prop_varsity",
-                                                             "Legacy with Legacy" = "prop_legacy",
+                                                             "Students with Legacy" = "prop_legacy",
                                                              "Students on Financial Aid" = "prop_financial_aid",
                                                              "Blocking Group Sizes" = "prop_group_size")
                                      ),
+                                     p("Select a variable to see its distributions across all 12 upperclassmen houses! Blue bars represent the actual values we calculated through data collection, while the black bars represent 95% confidence intervals we calculated by running 500 replicates of a randomized housing day."),
                                      mainPanel(
-                                       plotOutput("allHouses", width = "140%") %>%
+                                       plotOutput("allHouses", width = "160%", height = "500px") %>%
                                          withSpinner(color="#0dc5c1")
                                      ))
                             )),
-                tabPanel("Trends",
+                tabPanel("Other Trends",
                          navlistPanel(
-                           tabPanel("Self Segregation",
-                         titlePanel("Race"),
+                           tabPanel("Self-Segregation",
+                         titlePanel("Self-Segregation by Race"),
                          p("We wanted to investigate whether students self-segregated during the blocking process. Our first analysis, conducted below, shows that there is some degree of self-segregation. Of all the blocking groups that contained at least one Asian student, more than twenty percent of them were comprised entirely of Asian students. On the other hand, less than ten percent of the blocking groups that contained white students were entirely white."),
                          plotOutput("segregationGraphs") %>%
                   withSpinner(color="#0dc5c1"),
-                  titlePanel("Gender"),
+                  titlePanel("Self-Segregation by Gender"),
                   p("
                     We also investigated Gender distribution across blocking groups and found segregation occured in that realm also. 40 percent of blocking groups that contained a member of one gender were comprised entirely of that gender, a trend that was found in both the male and female genders."),
                   plotOutput("genderGraphs") %>%
                     withSpinner(color="#0dc5c1")),
                   tabPanel("Correlations",
                              titlePanel("Blocking with your Suitemates"),
-                                      p("hm"),
+                                      p("We wanted to see if the size of a given freshman dorm impacted whether suitemates from the dorm decided to block together. The data shows a negative correlation between dorm size and the percentage of suitemates from each dorm that blocked together; students were more likely to block with their suitemate/multiple suitemates if they lived in a smaller freshman dorm."),
                                      plotOutput("suitemateSizeRelationship") %>% 
-                                       withSpinner(color="#0dc5c1")),
+                                       withSpinner(color="#0dc5c1"),
+                           titlePanel("Blocking Group Size and Linking"),
+                           p("We were also interested in how blocking group size was related to whether groups linked with another blocking group. Our collected data shows that there is a slight negative correlation between blocking group size and the chance of a group linking with another group (a smaller-sized blocking group is, according to our dataset, more frequently paired with a linking counterpart). The visual below is jittered to provide a more clear view of the data."),
+                           plotOutput("linkVsGroupSize")%>%
+                             withSpinner(color="#0dc5c1")),
                   tabPanel("Miscellaneous",
-                           selectInput("selected_dorm",
-                                       label = "Showing data for:",
-                                       choices = c("Thayer", "Weld", "Straus", "Grays",
-                                                   "Wigglesworth", "Matthews",
-                                                   "Holworthy", "Greenough", 
-                                                   "Hurlbut", "Canaday", 
-                                                   "Stoughton", 
-                                                   "Massachusetts", 
-                                                   "Pennypacker",
-                                                   "Lionel", 
-                                                   "Hollis", 
-                                                   "Apley", 
-                                                   "Mower")),
                            titlePanel("Freshman Dorm -> House Placement"),
+                           p("In the visualization below, we have house placements arranged by freshman dorm. 100 percent of Massachusetts Hall residents were placed into a river house, but this number shouldn't be weighed too heavily due to the miniscule population size (14 members). Massachusetts was followed by Apley Court, which had roughly 86 percent of its members placed into a river house. Greenough had the most of its students quadded, with about forty percent of its members heading for the quad next year."),
                            plotOutput("whereDoTheyGo") %>%
                              withSpinner(color="#0dc5c1"),
                            titlePanel("Varsity Athletes per Blocking Group"),
+                           p("Perhaps the most popular housing day theory is that athletes are most likely to be placed in a river house. However, this year, Currier House had the highest number, on average, of varsity athletes per blocking group placed into that house."),
                   plotOutput("varsityPerBlock") %>% withSpinner(color="#0dc5c1")))),
                  tabPanel("Discussion",
-                          titlePanel("Conclusions from Fake Data"),
+                          titlePanel("Conclusions from Data Collection and Analysis"),
                           p("A huge wrench was thrown into our data collection with the coronavirus evacuation. We are currently working on acquiring data in spite of this disruption.
-               We inputted model data into the survey we made to get preliminary graphs. More detailed work will follow with actual data collection and analysis.")),
+               We inputted model data into the survey we made to get preliminary graphs. More detailed work will follow with actual data collection and analysis."),
+                          titlePanel("Potential Discrepancies in Data Collection/Collection Process"),
+                          p("Since this project is heavy in raw data collection, there are possibilities for error from the respondents. Although we tried to incentivize respondents with gift cards, there might not have been strong enough of an incentive for respondents to provide accurate information, and in the rare case some might have even put in inaccurate information to blow the end result. Some survey questions regarding personal information were sensitive, and we were therefore unable to get a large sample of results that would be the perfect representation of the Class of 2023. Further, possible errors included misspellings of textual data when trying to match the names of individuals. It was common to have individual repsondents misspell the names of their block mates and their blocking group leader's names. Variations in spacing, punctuations and capitalization also required extensive data cleaning in order to provide the most accurate interpretation of the data possible.")),
                  tabPanel("About", 
                           titlePanel("About"),
                           h3("Project Background and Motivations"),
-                          p("*Update* Our project has been compromised due to the Coronavirus outbreak and the resulting postponement of housing day. We are working to develop our algorithms for analyzing the data and will work with fake data for now.
-             The Harvard College houses is one of the most thrilling and dramatic days of the school year, and we wanted to wield data as a tool for tackling some of the myths and stereotypes about housing day.
+                          p("Housing Day at Harvard College is one of the most thrilling and dramatic days of the school year, and we wanted to wield data as a tool for tackling some of the myths and stereotypes about housing day.
                This project aims to continue the work of the previous blocking group project with more rigorous data analytics and statistical computation, more intuitive graph design, and additional questions (including sexual orientation). It will hopefully build on the previous analysis attempting to find any discrepancies.
               
 
@@ -302,7 +298,7 @@ server <- function(input, output) {
       crim_graph <- create_pie(crim_international, "Crimson Data")
     } else if (type == 2) {
       our_graph <- create_pie(our_athlete, "Our Data")
-      crim_graph <- create_pie(crim_athlete, "Crimson Data") +
+      crim_graph <- create_pie(crim_athletes, "Crimson Data") +
         labs(caption = "Crimson Athlete data only includes recruited student athletes.* 
 This likely causes the discrepancy seen here.")     
     } else if (type == 3) {
@@ -392,7 +388,7 @@ This likely causes the discrepancy seen here.")
       ),
       x = xlabel,
       y = "Replicates",
-      subtitle = "Bars represent confidence intervals") + 
+      subtitle = "Black bars represent confidence intervals") + 
       theme_classic()
     
     if(input$variable != "prop_group_size"){
@@ -420,7 +416,7 @@ This likely causes the discrepancy seen here.")
       ),
       x = xlabel,
       y = "Replicates",
-      subtitle = "Bars represent confidence intervals") + 
+      subtitle = "Black bars represent confidence intervals") + 
       theme_classic()
     
     if(input$variable != "prop_group_size"){
@@ -797,6 +793,42 @@ This likely causes the discrepancy seen here.")
                     
   })
   
+  output$suitemateSizeRelationship <- renderPlot({
+    
+    
+    suitemate_size_relationship %>%
+      ggplot(aes(x = size, y = perc_blockwithsuite))+geom_point() +
+      geom_smooth(method = "lm", se = F) + 
+      labs(x = "Size of Freshman Dorm",
+           y = "Percentage of blocking groups containing 2+ suitemates from dorm",
+           title = "Size of Freshman Dorm against Rooming with Suitemates") +
+      scale_y_continuous(labels = scales::percent) +
+      theme_classic()
+  })
+  
+  output$linkVsGroupSize <- renderPlot({
+    
+    
+    links_n_sizes <- official_housing %>% 
+      select(group_name, linking) %>% 
+      mutate(is_linking = 
+               ifelse(!is.na(linking), 1, 0)) %>% 
+      group_by(group_name, is_linking) %>% 
+      summarize(group_size = n()) %>% 
+      ungroup() %>% filter(group_size < 9)
+    
+    ggplot(links_n_sizes, aes(x = is_linking, y = group_size)) + 
+      geom_jitter() + 
+      geom_smooth(method = "lm", se = FALSE) +
+      scale_y_continuous(limits = c(0, 8)) +
+      scale_x_continuous(limits = c(0, 1)) + 
+      labs(x = "Linking Group (1 denotes presence of a linking group)",
+           y = "Blocking Group Size",
+           title = "Blocking Group Size vs Presence of a Linking Group") +
+      theme_classic()
+    
+    
+  })
   output$whereDoTheyGo <- renderPlot({
     
     totals <- official_housing %>%
@@ -808,9 +840,11 @@ This likely causes the discrepancy seen here.")
       count(dorm, quad)
   
     combined <- full_join(selected, totals, by = "dorm") %>%
-      mutate(pct = n/total)
+      mutate(pct = n/total,
+             pctriver = ifelse(quad == "River", pct, 0))
+      
     
-    ggplot(combined, aes(x = dorm, y = pct, color = quad)) + 
+    ggplot(combined, aes(x = fct_reorder(dorm, (pctriver)), y = pct, color = quad)) + 
     geom_bar(stat = "identity") +
       scale_y_continuous(labels = scales::percent) +
       coord_flip() +
@@ -820,18 +854,6 @@ This likely causes the discrepancy seen here.")
       theme_classic()
     
   })
-  
-  output$suitemateSizeRelationship <- renderPlot({
-  
-  
-  suitemate_size_relationship %>%
-    ggplot(aes(x = size, y = perc_blockwithsuite))+geom_point() +
-    geom_smooth(method = "lm", se = F) + 
-      labs(x = "Size of Freshman Dorm",
-           y = "Percentage of blocking groups containing 2+ suitemates from dorm") +
-      scale_y_continuous(labels = scales::percent) +
-      theme_classic()
-  })
 
   
   output$varsityPerBlock <- renderPlot({
@@ -839,7 +861,8 @@ This likely causes the discrepancy seen here.")
     ggplot(varsity_per_block, aes(x = fct_reorder(house, (average_varsity)), y = average_varsity)) +
       geom_col() + 
       labs(x = "House Placement",
-           y = "Average Varsity athletes per blocking group") +
+           y = "Average Varsity athletes per blocking group",
+           title = "Varsity Athletes per Blocking Group") +
       theme_classic()
   })
   
