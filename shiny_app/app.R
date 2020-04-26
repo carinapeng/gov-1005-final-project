@@ -6,16 +6,18 @@ library(tidyverse)
 library(shinythemes)
 library(skimr)
 library(patchwork)
+library(shinycssloaders)
 library(cowplot)
 
-# must install plotly package
+# READING IN DATA FILES
 
 simplified <- readRDS("simplified.RDS")
 
 base_data <- readRDS("base_data.RDS") %>% ungroup()
-
 base_data_pivoted <- base_data %>% 
   pivot_longer(-data, names_to = "community", values_to = "demographics")
+
+#CREATING COMMUNITIES THAT ARE FILTERED BY HOUSE TO MAKE THE PROCESS QUICKER
 
 pfoho <- simplified %>% filter(community == "pfoho") %>% unnest(demographics) %>% ungroup()
 currier <- simplified %>% filter(community == "currier") %>% unnest(demographics) %>% ungroup()
@@ -42,6 +44,9 @@ base_lowell <- base_data %>% select(lowell) %>% unnest(lowell)
 base_eliot <- base_data %>% select(eliot) %>% unnest(eliot)
 base_kirkland <- base_data %>% select(kirkland) %>% unnest(kirkland)
 base_winthrop <- base_data %>% select(winthrop) %>% unnest(winthrop)
+
+ethnicity <- readRDS("ethnicity_results.RDS")
+gender_results <- readRDS("gender_results.RDS")
 
 #Confidence interval function
 
@@ -84,9 +89,9 @@ pull_desired <- function(data, variable){
 
 ui <- navbarPage(theme = shinytheme("darkly"),
                  "Blocking Project",
-                 tabPanel("Comparisons Across Neighborhoods",
+                 tabPanel("Comparisons",
                           navlistPanel(
-                            tabPanel("WhatToCall",
+                            tabPanel("Comparisons Across Neighborhoods",
                                      selectInput("neighborhood_1", 
                                                  label = "Graph 1",
                                                  choices = c("River West" = "river_west",
@@ -111,20 +116,28 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                                                              "Financial Aid" = "prop_financial_aid",
                                                              "Blocking Group Size" = "prop_group_size")),
                                      mainPanel(
-                                       plotOutput("graphsTogether", width = "150%")
-                                     )))),
-                 tabPanel("Comparisons Across Houses",
-                          selectInput("variable2",
-                                       label = "Variable Displayed",
-                                       choices = c("International" = "prop_international",
-                                                   "Varsity" = "prop_varsity",
-                                                   "Legacy" = "prop_legacy",
-                                                   "Financial Aid" = "prop_financial_aid",
-                                                   "Blocking Group Size" = "prop_group_size")
-                 ),
-                 mainPanel(
-                   plotOutput("allHouses", width = "140%")
-                 )),
+                                       plotOutput("graphsTogether", width = "150%") %>%
+                                         withSpinner(color="#0dc5c1")
+                                     )),
+                            tabPanel("Comparisons Across Houses",
+                                     selectInput("variable2",
+                                                 label = "Variable Displayed",
+                                                 choices = c("International" = "prop_international",
+                                                             "Varsity" = "prop_varsity",
+                                                             "Legacy" = "prop_legacy",
+                                                             "Financial Aid" = "prop_financial_aid",
+                                                             "Blocking Group Size" = "prop_group_size")
+                                     ),
+                                     mainPanel(
+                                       plotOutput("allHouses", width = "140%") %>%
+                                         withSpinner(color="#0dc5c1")
+                                     ))
+                            )),
+                tabPanel("Trends",
+                         titlePanel("Self Segregation"),
+                         p("We wanted to investigate..."),
+                         plotOutput("segregationGraphs")) %>%
+                  withSpinner(color="#0dc5c1"),
                  tabPanel("Discussion",
                           titlePanel("Conclusions from Fake Data"),
                           p("A huge wrench was thrown into our data collection with the coronavirus evacuation. We are currently working on acquiring data in spite of this disruption.
@@ -215,6 +228,7 @@ server <- function(input, output) {
         input$neighborhood_1 == "river_central" ~ "River Central")
       ),
       x = xlabel,
+      y = "Replicates",
       subtitle = "Bars represent confidence intervals") + 
       theme_classic()
     
@@ -242,6 +256,7 @@ server <- function(input, output) {
         input$neighborhood_2 == "river_central" ~ "River Central")
       ),
       x = xlabel,
+      y = "Replicates",
       subtitle = "Bars represent confidence intervals") + 
       theme_classic()
     
@@ -256,6 +271,9 @@ server <- function(input, output) {
     plot_grid(graph1, graph2)
     
   })
+  
+  
+#CREATING A 4X3 GRID OF ALL THE HOUSES
   
   output$allHouses <- renderPlot({
   
@@ -563,8 +581,20 @@ server <- function(input, output) {
     
   })
   
+  
+  output$segregationGraphs <- renderPlot({
+    
+    asians <- ggplot(ethnicity, aes(x = prop_asian)) + geom_histogram()
+    
+    whites <- ggplot(ethnicity, aes(x = prop_white)) + geom_histogram()
+    
+    plot_grid(asians, whites)
+    
+    
+  })
+  
+  
   }
-
 
 
 shinyApp(ui, server)
