@@ -1,6 +1,6 @@
 ---
 title: "segregation"
-author: "Lucy he"
+author: "Lucy He"
 date: "4/20/2020"
 output: html_document
 ---
