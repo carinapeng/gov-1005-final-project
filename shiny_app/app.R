@@ -210,7 +210,7 @@ ui <- navbarPage(theme = shinytheme("simplex"),
                                                              "Financial Aid Students" = "prop_financial_aid",
                                                              "Blocking Group Sizes" = "prop_group_size")),
                                      mainPanel(
-                                       p("Pick two neighborhoods (we added the River as a section for your convenience) and a variable to view a side-by-side comparison! Blue bars represent the actual values we calculated through data collection, while the black bars represent 95% confidence intervals we calculated by running 500 replicates of a randomized housing day."),
+                                       p("Pick two neighborhoods (we added the River as a section for your convenience) and a variable to view a side-by-side comparison! Turquoise bars represent the actual values we calculated through data collection, while the red bars represent 95% confidence intervals we calculated by running 500 replicates of a randomized housing day."),
                                        plotOutput("graphsTogether", width = "150%") %>%
                                          withSpinner(color="#0dc5c1")
                                      )),
@@ -223,7 +223,7 @@ ui <- navbarPage(theme = shinytheme("simplex"),
                                                              "Students on Financial Aid" = "prop_financial_aid",
                                                              "Blocking Group Sizes" = "prop_group_size")
                                      ),
-                                     p("Select a variable to see its distributions across all 12 upperclassmen houses! Blue bars represent the actual values we calculated through data collection, while the black bars represent 95% confidence intervals we calculated by running 500 replicates of a randomized housing day."),
+                                     p("Select a variable to see its distributions across all 12 upperclassmen houses! Turquoise bars represent the actual values we calculated through data collection, while the red bars represent 95% confidence intervals we calculated by running 500 replicates of a randomized housing day."),
                                      mainPanel(
                                        plotOutput("allHouses", width = "160%", height = "500px") %>%
                                          withSpinner(color="#0dc5c1")
@@ -375,10 +375,10 @@ This likely causes the discrepancy seen here.")
       geom_histogram(binwidth = case_when(
         input$variable != "prop_group_size" ~ .01,
         TRUE ~ .25)) +
-      geom_vline(xintercept  = conf.int1[1]) + 
-      geom_vline(xintercept  = conf.int1[2]) +
+      geom_vline(xintercept  = conf.int1[1], color = "#F8766D") + 
+      geom_vline(xintercept  = conf.int1[2], color = "#F8766D") +
       geom_vline(xintercept = base_value1,
-                 color = "blue") +
+                 color = "#00BFC4") +
       labs(title = paste("Showing Data for", case_when(
         input$neighborhood_1 == "quad" ~ "The Quad",
         input$neighborhood_1 == "river" ~ "The River",
@@ -388,7 +388,7 @@ This likely causes the discrepancy seen here.")
       ),
       x = xlabel,
       y = "Replicates",
-      subtitle = "Black bars represent confidence intervals") + 
+      subtitle = "Red bars represent confidence intervals") + 
       theme_classic()
     
     if(input$variable != "prop_group_size"){
@@ -403,10 +403,10 @@ This likely causes the discrepancy seen here.")
       geom_histogram(binwidth = case_when(
         input$variable != "prop_group_size" ~ .01,
         TRUE ~ .25)) +
-      geom_vline(xintercept  = conf.int2[1]) + 
-      geom_vline(xintercept  = conf.int2[2]) + 
+      geom_vline(xintercept  = conf.int2[1], color = "#F8766D") + 
+      geom_vline(xintercept  = conf.int2[2], color = "#F8766D") + 
       geom_vline(xintercept = base_value2,
-                 color = "blue") +
+                 color = "#00BFC4") +
       labs(title = paste("Showing Data for", case_when(
         input$neighborhood_2 == "quad" ~ "The Quad",
         input$neighborhood_2 == "river" ~ "The River",
@@ -416,7 +416,7 @@ This likely causes the discrepancy seen here.")
       ),
       x = xlabel,
       y = "Replicates",
-      subtitle = "Black bars represent confidence intervals") + 
+      subtitle = "Red bars represent confidence intervals") + 
       theme_classic()
     
     if(input$variable != "prop_group_size"){
@@ -472,10 +472,10 @@ This likely causes the discrepancy seen here.")
       labs(x = xlabel,
            y = ylabel,
            title = "Pfoho") + 
-      geom_vline(xintercept = pfoho_conf.int[1]) + 
-      geom_vline(xintercept = pfoho_conf.int[2]) +
+      geom_vline(xintercept = pfoho_conf.int[1], color = "#F8766D") + 
+      geom_vline(xintercept = pfoho_conf.int[2], color = "#F8766D") +
       geom_vline(xintercept = pull_desired(base_pfoho, input$variable2), 
-                 color = "blue") +
+                 color = "#00BFC4") +
         theme_classic()
     
     currier_conf.int <- confidence_interval_pivoted("currier") %>%
@@ -492,10 +492,10 @@ This likely causes the discrepancy seen here.")
       labs(x = xlabel, 
            y = ylabel,
            title = "Currier") + 
-      geom_vline(xintercept = currier_conf.int[1]) + 
-      geom_vline(xintercept = currier_conf.int[2]) +
+      geom_vline(xintercept = currier_conf.int[1], color = "#F8766D") + 
+      geom_vline(xintercept = currier_conf.int[2], color = "#F8766D") +
       geom_vline(xintercept = pull_desired(base_currier, input$variable2), 
-                 color = "blue") +
+                 color = "#00BFC4") +
         theme_classic()
     
     cabot_conf.int <- confidence_interval_pivoted("cabot") %>%
@@ -512,10 +512,10 @@ This likely causes the discrepancy seen here.")
       labs(x = xlabel, 
            y = ylabel,
            title = "Cabot") + 
-      geom_vline(xintercept = cabot_conf.int[1]) + 
-      geom_vline(xintercept = cabot_conf.int[2]) +
+      geom_vline(xintercept = cabot_conf.int[1], color = "#F8766D") + 
+      geom_vline(xintercept = cabot_conf.int[2], color = "#F8766D") +
       geom_vline(xintercept = pull_desired(base_cabot, input$variable2), 
-                 color = "blue") +
+                 color = "#00BFC4") +
         theme_classic()
     
     mather_conf.int <- confidence_interval_pivoted("mather") %>%
@@ -532,10 +532,10 @@ This likely causes the discrepancy seen here.")
       labs(x = xlabel, 
            y = ylabel,
            title = "Mather") + 
-      geom_vline(xintercept = mather_conf.int[1]) + 
-      geom_vline(xintercept = mather_conf.int[2]) +
+      geom_vline(xintercept = mather_conf.int[1], color = "#F8766D") + 
+      geom_vline(xintercept = mather_conf.int[2], color = "#F8766D") +
       geom_vline(xintercept = pull_desired(base_mather, input$variable2), 
-                 color = "blue") +
+                 color = "#00BFC4") +
         theme_classic()
     
     leverett_conf.int <- confidence_interval_pivoted("leverett") %>%
@@ -552,10 +552,10 @@ This likely causes the discrepancy seen here.")
       labs(x = xlabel, 
            y = ylabel,
            title = "Leverett") + 
-      geom_vline(xintercept = leverett_conf.int[1]) + 
-      geom_vline(xintercept = leverett_conf.int[2]) +
+      geom_vline(xintercept = leverett_conf.int[1], color = "#F8766D") + 
+      geom_vline(xintercept = leverett_conf.int[2], color = "#F8766D") +
       geom_vline(xintercept = pull_desired(base_leverett, input$variable2), 
-                 color = "blue") +
+                 color = "#00BFC4") +
         theme_classic()
       
     dunster_conf.int <- confidence_interval_pivoted("dunster") %>%
@@ -572,10 +572,10 @@ This likely causes the discrepancy seen here.")
      labs(x = xlabel, 
           y = ylabel,
           title = "Dunster") + 
-     geom_vline(xintercept = dunster_conf.int[1]) + 
-     geom_vline(xintercept = dunster_conf.int[2]) +
+     geom_vline(xintercept = dunster_conf.int[1], color = "#F8766D") + 
+     geom_vline(xintercept = dunster_conf.int[2], color = "#F8766D") +
      geom_vline(xintercept = pull_desired(base_dunster, input$variable2), 
-                color = "blue") +
+                color = "#00BFC4") +
       theme_classic()
     
     eliot_conf.int <- confidence_interval_pivoted("eliot") %>%
@@ -592,10 +592,10 @@ This likely causes the discrepancy seen here.")
       labs(x = xlabel, 
            y = ylabel,
            title = "Eliot") + 
-      geom_vline(xintercept = eliot_conf.int[1]) + 
-      geom_vline(xintercept = eliot_conf.int[2]) +
+      geom_vline(xintercept = eliot_conf.int[1], color = "#F8766D") + 
+      geom_vline(xintercept = eliot_conf.int[2], color = "#F8766D") +
       geom_vline(xintercept = pull_desired(base_eliot, input$variable2), 
-                 color = "blue") +
+                 color = "#00BFC4") +
       theme_classic()
     
     kirkland_conf.int <- confidence_interval_pivoted("kirkland") %>%
@@ -612,10 +612,10 @@ This likely causes the discrepancy seen here.")
       labs(x = xlabel, 
            y = ylabel,
            title = "Kirkland") + 
-      geom_vline(xintercept = kirkland_conf.int[1]) + 
-      geom_vline(xintercept = kirkland_conf.int[2]) + 
+      geom_vline(xintercept = kirkland_conf.int[1], color = "#F8766D") + 
+      geom_vline(xintercept = kirkland_conf.int[2], color = "#F8766D") + 
       geom_vline(xintercept = pull_desired(base_kirkland, input$variable2), 
-                 color = "blue") +
+                 color = "#00BFC4") +
       theme_classic()
 
     winthrop_conf.int <- confidence_interval_pivoted("winthrop") %>%
@@ -632,10 +632,10 @@ This likely causes the discrepancy seen here.")
       labs(x = xlabel, 
            y = ylabel,
            title = "Winthrop") +
-      geom_vline(xintercept = winthrop_conf.int[1]) + 
-      geom_vline(xintercept = winthrop_conf.int[2]) +
+      geom_vline(xintercept = winthrop_conf.int[1], color = "#F8766D") + 
+      geom_vline(xintercept = winthrop_conf.int[2], color = "#F8766D") +
       geom_vline(xintercept = pull_desired(base_winthrop, input$variable2), 
-                 color = "blue") +
+                 color = "#00BFC4") +
       theme_classic()
 
     adams_conf.int <- confidence_interval_pivoted("adams") %>%
@@ -652,10 +652,10 @@ This likely causes the discrepancy seen here.")
       labs(x = xlabel, 
            y = ylabel,
            title = "Adams") + 
-      geom_vline(xintercept = adams_conf.int[1]) + 
-      geom_vline(xintercept = adams_conf.int[2]) +
+      geom_vline(xintercept = adams_conf.int[1], color = "#F8766D") + 
+      geom_vline(xintercept = adams_conf.int[2], color = "#F8766D") +
       geom_vline(xintercept = pull_desired(base_adams, input$variable2), 
-                 color = "blue") +
+                 color = "#00BFC4") +
       theme_classic()
     
     lowell_conf.int <- confidence_interval_pivoted("lowell") %>%
@@ -669,10 +669,10 @@ This likely causes the discrepancy seen here.")
       input$variable2 == "prop_financial_aid" ~ prop_financial_aid,
       input$variable2 == "prop_group_size" ~ prop_group_size))) +
       geom_histogram(binwidth = binvalue) + 
-      geom_vline(xintercept = lowell_conf.int[1]) + 
-      geom_vline(xintercept = lowell_conf.int[2]) +
+      geom_vline(xintercept = lowell_conf.int[1], color = "#F8766D") + 
+      geom_vline(xintercept = lowell_conf.int[2], color = "#F8766D") +
       geom_vline(xintercept = pull_desired(base_lowell, input$variable2), 
-                 color = "blue") +
+                 color = "#00BFC4") +
       labs(x = xlabel, 
            y = ylabel,
            title = "Lowell") + 
@@ -694,10 +694,10 @@ This likely causes the discrepancy seen here.")
       labs(x = xlabel,
            y = ylabel,
            title = "Quincy") + 
-      geom_vline(xintercept = quincy_conf.int[1]) + 
-      geom_vline(xintercept = quincy_conf.int[2]) +
+      geom_vline(xintercept = quincy_conf.int[1], color = "#F8766D") + 
+      geom_vline(xintercept = quincy_conf.int[2], color = "#F8766D") +
       geom_vline(xintercept = pull_desired(base_quincy, input$variable2), 
-                 color = "blue") +
+                 color = "#00BFC4") +
       theme_classic()
     
     if(input$variable2 != "prop_group_size"){
@@ -793,6 +793,10 @@ This likely causes the discrepancy seen here.")
                     
   })
   
+  output$sexualOrientationGraphs <- renderPlot({
+    
+  })
+  
   output$suitemateSizeRelationship <- renderPlot({
     
     
@@ -821,8 +825,8 @@ This likely causes the discrepancy seen here.")
       geom_jitter() + 
       geom_smooth(method = "lm", se = FALSE) +
       scale_y_continuous(limits = c(0, 8)) +
-      scale_x_continuous(limits = c(0, 1)) + 
-      labs(x = "Linking Group (1 denotes presence of a linking group)",
+      scale_x_continuous(limits = c(0, 1), breaks = c(0,1), labels = c("not linked", "linked")) + 
+      labs(x = "Presence of a Linking Group",
            y = "Blocking Group Size",
            title = "Blocking Group Size vs Presence of a Linking Group") +
       theme_classic()
