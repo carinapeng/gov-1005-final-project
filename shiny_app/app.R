@@ -1,4 +1,3 @@
-
 library(shiny)
 library(plotly)
 library(ggthemes)
@@ -15,7 +14,8 @@ library(png)
 
 #Data we cleaned and collected:
 
-official_housing <- readRDS("official_housing.RDS")
+official_housing <- readRDS("official_housing.RDS") %>%
+  mutate(quad = ifelse(house %in% c("Pforzheimer", "Cabot", "Currier"), "Quad", "River"))
 
 #Pivoted dataset that excludes data and assigned for the purpose of saving space.
 
@@ -228,7 +228,6 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                                      ))
                             )),
                 tabPanel("Trends",
-                         
                          navlistPanel(
                            tabPanel("Self Segregation",
                          titlePanel("Race"),
@@ -246,6 +245,23 @@ ui <- navbarPage(theme = shinytheme("darkly"),
                                      plotOutput("suitemateSizeRelationship") %>% 
                                        withSpinner(color="#0dc5c1")),
                   tabPanel("Miscellaneous",
+                           selectInput("selected_dorm",
+                                       label = "Showing data for:",
+                                       choices = c("Thayer", "Weld", "Straus", "Grays",
+                                                   "Wigglesworth", "Matthews",
+                                                   "Holworthy", "Greenough", 
+                                                   "Hurlbut", "Canaday", 
+                                                   "Stoughton", 
+                                                   "Massachusetts", 
+                                                   "Pennypacker",
+                                                   "Lionel", 
+                                                   "Hollis", 
+                                                   "Apley", 
+                                                   "Mower")),
+                           titlePanel("Freshman Dorm -> House Placement"),
+                           plotOutput("whereDoTheyGo") %>%
+                             withSpinner(color="#0dc5c1"),
+                           titlePanel("Varsity Athletes per Blocking Group"),
                   plotOutput("varsityPerBlock") %>% withSpinner(color="#0dc5c1")))),
                  tabPanel("Discussion",
                           titlePanel("Conclusions from Fake Data"),
@@ -783,7 +799,25 @@ This likely causes the discrepancy seen here.")
   
   output$whereDoTheyGo <- renderPlot({
     
+    totals <- official_housing %>%
+       count(dorm) %>%
+      rename(total = n)
+      
+    selected <- official_housing %>%
+    select(dorm, house, quad) %>%
+      count(dorm, quad)
+  
+    combined <- full_join(selected, totals, by = "dorm") %>%
+      mutate(pct = n/total)
     
+    ggplot(combined, aes(x = dorm, y = pct, color = quad)) + 
+    geom_bar(stat = "identity") +
+      scale_y_continuous(labels = scales::percent) +
+      coord_flip() +
+      labs(title = "House Placements by Freshman Dorm",
+           x = "Freshman Dorm", 
+           y = "Percentage of Students") +
+      theme_classic()
     
   })
   

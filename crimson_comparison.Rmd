@@ -57,7 +57,7 @@ official_housing <- read_sheet(ss1)
 
 ###
 crim_gender <- data.frame(
-  Type = c("Female", "Male", "Genderqueer/Non-binaryNon-binary/Genderqueer", "Prefer not to say"),
+  Type = c("Female", "Male", "Genderqueer/Non-binary", "Prefer not to say"),
   Percentage = c(50.7, 48.6, 0.2, 0.5)
 )
 
@@ -130,7 +130,7 @@ our_legacy <- data.frame(
 )
 
 our_athletes <- data.frame(
-  Type = c("Varsity Student Athlete", "Not a Varsity Student Athlete"),
+  Type = c("Varsity  Athlete", "Not a Varsity Athlete"),
   Percentage = c(round(mean(official_housing$varsity, na.rm = TRUE)*100, digits = 1), 100-round(mean(official_housing$varsity, na.rm = TRUE)*100, digits = 1))
 )
 
