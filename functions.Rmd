@@ -257,30 +257,32 @@ overview <- function(assigned, community){
 }
 ```
 
+
 ```{r calculate_house_size}
 # assigns the appropriate size to each house which is used
 # later to cap the number of people allowed in each house
 # during random assignments. The values are cumulative because
 # it allows the for loop to run smoother in the house assignment
 # function
-
-num_adams <- 132
-num_cabot <- 258 # 126
-num_leverett <- 414 # 156
-num_dunster <- 543 # 129
-num_eliot <- 691 # 148
-num_kirkland <- 821 # 130
-num_currier <- 947 # 126
-num_lowell <- 1097 # 150
-num_mather <- 1221 # 124
-num_pfoho <- 1373 #152
-num_quincy <- 1520 # 147
-num_winthrop <- 1637 # 117
+# use 1667 because sum(grouped$fake_group_size) goes above 1637, but need to make
+# sure that everyone gets a house according to proportion.
+ #why sum(grouped$fake_group_size) goes above 1637? Maybe because there are some group_leader information that are just messing around, such as  "a" for person Nicholas Brennan
+num_adams <- 132/1637*1680
+num_cabot <- 258/1637*1680
+num_leverett <- 414/1637*1680
+num_dunster <- 543/1637*1680
+num_eliot <- 691/1637*1680
+num_kirkland <- 821/1637*1680
+num_currier <- 947/1637*1680
+num_lowell <- 1097/1637*1680
+num_mather <- 1221/1637*1680
+num_pfoho <- 1373/1637*1680
+num_quincy <- 1520/1637*1680
+num_winthrop <- 1637/1637*1680
 ```
 
 
 ```{r assign_houses}
-
 # assign houses
 # takes in official_housing and assigns houses randomly. For people 
 # who do not have a blocking group size reported, we assign the size
@@ -288,19 +290,12 @@ num_winthrop <- 1637 # 117
 # affect the size of the real group.
 assign_houses <- function(official_housing = official_housing){
   grouped <- official_housing %>% 
-    mutate(random_house = "") %>% 
-    
-    # if someone didn't fill out the survey, we can't put them in a group with others.
-    # we should assign them as though they are a floater but we don't want
-    # to actually assign them a blocking group size because that would mess up the 
-    # analysis later on blocking group size per commmunity. So I create a fake
-    # group size that's used for sorting (1 if someone doesn't have data, or their actual
-    # blocking group size if we have their information).
-    
-    mutate(fake_group_size = ifelse(!is.na(group_size),group_size,1)) %>% 
-    group_by(group_leader) %>% 
+    mutate(random_house = "")  %>%
+  mutate(fake_group_leader = ifelse(!is.na(group_leader),group_leader,full_name))%>%   mutate(fake_group_size = ifelse(!is.na(group_size),group_size,1))%>%
+    group_by(fake_group_leader) %>% 
     slice(1)
   
+ #now the total number of students is 1667. Can see that there are some group_leader information that are just messing around, such as  "a" for person Nicholas Brennan
   count <- 0
   for (row in 1:nrow(grouped)) {
       if((count + grouped[row,"fake_group_size"] )<= num_adams) {
@@ -343,16 +338,22 @@ assign_houses <- function(official_housing = official_housing){
     
       else {grouped[row,"random_house"]<- "Winthrop"}
   }
-    
-  assigned_all <- left_join(official_housing, grouped, by = "group_leader") %>% 
-  select(1:20, 40) %>%
+  # official_housing1 has faked "group_leader" for those that did not fill out the survey, for randomization purposes.
+  official_housing1 <- official_housing%>%
+    mutate(fake_group_leader = ifelse(!is.na(group_leader),group_leader,full_name))
+  
+  grouped1 <- grouped %>%
+    select(fake_group_leader, random_house)
+  
+  assigned_all <- left_join(official_housing1, grouped1, by = "fake_group_leader") %>%
   rename_at(.vars = vars(ends_with(".x")),
             .funs = funs(sub("[.]x$", "", .))) %>%
-  mutate(house = random_house) 
-  # %>%
-  # select(-random_house, -fake_group_size)
+    mutate(house = random_house) %>%
+  select(-random_house, -fake_group_leader)
   
-  assigned_all
+  assigned_all %>% 
+    arrange(group_leader)
+  
 }
 ```
 
