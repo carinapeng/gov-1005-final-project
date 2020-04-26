@@ -238,7 +238,7 @@ ui <- navbarPage(theme = shinytheme("simplex"),
                   withSpinner(color="#0dc5c1"),
                   titlePanel("Self-Segregation by Gender"),
                   p("
-                    We also investigated Gender distribution across blocking groups and found segregation occured in that realm also. 40 percent of blocking groups that contained a member of one gender were comprised entirely of that gender, a trend that was found in both the male and female genders."),
+                    We also investigated gender distribution across blocking groups and found segregation occured in that realm also. 40 percent of blocking groups that contained a member of one gender were comprised entirely of that gender, a trend that was found in both the male and female genders."),
                   plotOutput("genderGraphs") %>%
                     withSpinner(color="#0dc5c1")),
                   tabPanel("Correlations",
@@ -774,8 +774,8 @@ This likely causes the discrepancy seen here.")
       scale_x_continuous(limits = c(.1, 1.1), breaks = c(.1, .2, .3, .4, .5, .6, .7, .8, .9, 1), labels = scales::percent) +
       scale_y_continuous(limits = c(0, .5), labels = scales::percent) +
       labs(x = "Percentage of female students within blocking group", 
-           y = "Percentage of Blocking Groups",
-           title = "Composition of Blocking Groups containing female students",
+           y = "Percentage of blocking groups",
+           title = "Composition of blocking groups containing female students",
            subtitle = "55 blocking groups contained at least one female student") +
       theme_classic() 
     
@@ -784,9 +784,9 @@ This likely causes the discrepancy seen here.")
       scale_x_continuous(limits = c(.1, 1.1), breaks = c(.1, .2, .3, .4, .5, .6, .7, .8, .9, 1), labels = scales::percent) +
       scale_y_continuous(limits = c(0, .5), labels = scales::percent) +
       labs(x = "Percentage of male students within blocking group", 
-           y = "Percentage of Blocking Groups",
-           title = "Composition of Blocking Groups containing male students",
-           subtitle = "49 blocking groups contained at least one mmale student") +
+           y = "Percentage of blocking groups",
+           title = "Composition of blocking groups containing male students",
+           subtitle = "49 blocking groups contained at least one male student") +
       theme_classic() 
     
     plot_grid(females, males)
