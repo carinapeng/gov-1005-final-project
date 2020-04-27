@@ -1,0 +1,326 @@
+---
+title: "segregation"
+author: "Lucy He"
+date: "4/20/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+
+```{r load_libraries}
+library(tidyverse)
+library(googlesheets4)
+library(rio)
+library(ggplot2)
+library(readxl)
+library(reprex)
+library(janitor)
+library(gt)
+library(haven)
+library(shiny)
+library(infer)
+library(dplyr)
+library(moderndive)
+library(broom)
+library(skimr)
+library(gganimate)
+library(rpart.plot)
+library(tidyverse)
+library(patchwork)
+library("writexl")
+```
+
+
+```{r read_sheets}
+ss1 <- "https://docs.google.com/spreadsheets/d/1pcDSa3cnT0q7RMJtuNX-O0aE2otdhl1AuhRyEp-KqZA/edit#gid=1174393477"
+ss2 <- "https://docs.google.com/spreadsheets/d/1XXfXeCznOiK7Lhp_QUPqlsqiPwMWIUWM48pTkADdPmY/edit#gid=1449741562"
+ss3 <- "https://docs.google.com/spreadsheets/d/1chv3WHBGhjK5szM2RPCjakzHBCChfmZGjBy04i0RRDw/edit#gid=1546540256"
+sheets_deauth()
+clean_data <- sheets_read(ss1) 
+pivoted_validation <- sheets_read(ss2)
+first_years <- sheets_read(ss3)
+```
+
+
+```{r join_data}
+partial <- left_join(x = first_years,
+          y = clean_data,
+          by = c("full_name"))
+official_housing <- left_join(x = partial,
+                              y = pivoted_validation,
+                              by = c("full_name")) 
+# write_xlsx(official_housing,"official_housing_4.25.xlsx")
+```
+
+```{r prop function, echo=F}
+# general prop function
+prop <- function(list1,list2) {
+  length(list1)/length(list2)
+}
+```
+
+```{r real sizes of houses, echo = FALSE}
+real_sizes <- official_housing %>%
+  group_by(house) %>%
+  summarize(size = n())
+```
+
+
+```{r distribution of ethnicity, echo = FALSE}
+# only look at groups that are above a certain response rate
+added_response_rate <- official_housing %>%
+  filter(!is.na(group_leader)) %>%
+  group_by(group_leader) %>%
+  arrange(group_leader) %>%
+  mutate(group_size = n()) %>%
+  mutate(response_rate = length(which(!is.na(gender)))/group_size) %>%
+  filter(response_rate > 0.5) %>%
+  filter(group_size > 1)
+# reuse part of the code in proportions, wrap it in a big function
+get_race_table <- function(data){
+sw <- which(grepl("White", data$ethnicity))
+a <- which(grepl("Asian", data$ethnicity))
+b <- which(grepl("Black", data$ethnicity))
+hl <- which(grepl("Hispanic/Latinx",data$ethnicity))
+mena <- which(grepl("Middle Eastern/North African", data$ethnicity))
+indna <- which(grepl("Indigenous/Native American", data$ethnicity))
+eth_pref <- which(grepl("Prefer not to say", data$ethnicity))
+# total ethnicities reported
+total_ethnicity = c(w, a, b, hl, mena, indna, eth_pref)
+# ethinicity proportions table
+prop_ethnicity_tibble <- tibble(
+  prop_white = prop(w, total_ethnicity),
+  prop_asian = prop(a, total_ethnicity),
+  prop_black = prop(b, total_ethnicity),
+  prop_hl = prop(hl, total_ethnicity),
+  prop_mena = prop(mena, total_ethnicity),
+  prop_indna = prop(indna, total_ethnicity),
+  prop_eth_pref = prop(eth_pref, total_ethnicity)
+)
+prop_ethnicity_tibble
+}
+# ethnicity results for the groups we're studying
+ethnicity_results <- added_response_rate %>%
+  group_by(group_leader) %>%
+  nest() %>%
+  mutate(ethnicity_results = map(data, ~get_race_table(.))) %>%
+  unnest(ethnicity_results) 
+
+saveRDS(object = ethnicity_results, file = "shiny_app/ethnicity_results.RDS")
+  
+ethnicity_results %>%
+  ggplot(aes(x=prop_asian)) +geom_histogram()
+ethnicity_results %>%
+  ggplot(aes(x=prop_white)) +geom_histogram()
+ethnicity_results %>%
+  ggplot(aes(x=prop_black)) +geom_histogram()
+# add other ethnicities as well, may need to adjust range of y axis
+```
+
+
+```{r gender segregation, echo = FALSE}
+get_gender_table <- function(data){
+f <- which(grepl("Female", data$gender))
+m <- which(grepl("Male", data$gender))
+# total genders reported
+total_gender = c(f, m)
+# gender proportions table
+prop_gender_tibble <- tibble(
+  prop_female = prop(f, total_gender),
+  prop_male = prop(m, total_gender))
+prop_gender_tibble
+}
+ethnicity_results<- added_response_rate %>%
+  group_by(group_leader) %>%
+  nest() %>%
+  mutate(ethnicity_results = map(data, ~get_gender_table(.))) %>%
+  unnest(ethnicity_results) 
+
+
+saveRDS(object = ethnicity_results, file = "shiny_app/gender_results.RDS")
+  
+ethnicity_results %>%
+  ggplot(aes(x=prop_female)) +geom_histogram()
+ethnicity_results %>%
+  ggplot(aes(x=prop_male)) +geom_histogram()
+```
+
+
+```{r international segregation, echo = FALSE}
+# not very informative...
+international_prop <- official_housing %>%
+  filter(!is.na(group_leader)) %>%
+  group_by(group_leader) %>%
+  arrange(group_leader) %>%
+  mutate(group_size = n()) %>%
+  mutate(response_rate = length(which(!is.na(gender)))/group_size) %>%
+  filter(response_rate > 0.5) %>%
+  filter(group_size > 1) %>%
+  mutate(perc_international = length(which(international == 1))/group_size)%>%
+  slice(1) 
+international_prop %>%
+  ggplot(aes(x=perc_international))+geom_histogram()
+```
+
+```{r block_with_suitemates}
+# This chunk looks at which freshman dorm block together the most
+# consider adding the circle pacakge graph april posted on piazza?
+# this is percentage of respondents from each dorm that block with suitemates
+# Thinking about creating a multivariable regression, (size + vertical entryway (1,0))
+
+suitemate_perc <- official_housing %>%
+  group_by(dorm) %>%
+  filter(!is.na(suitemates)) %>%
+  count(suitemates) %>%
+  mutate(perc_blockwithsuite = n/sum(n)) %>%
+  filter(suitemates == 1) %>%
+  arrange(desc(perc_blockwithsuite)) 
+
+dorm_size <- first_years %>%
+  group_by(dorm)%>%
+  count()%>%
+  mutate(size=`n`)%>%
+  select(-n)
+  
+suitemate_size_relationship <- suitemate_perc %>%
+  full_join(dorm_size, by = "dorm") %>%
+   select(perc_blockwithsuite,size,dorm) 
+
+saveRDS(object = suitemate_size_relationship, file = "shiny_app/suitemate_size_relationship.RDS")
+
+
+suitemate_size_relationship%>%
+  ggplot(aes(x = size, y = perc_blockwithsuite))+geom_point() +
+  geom_smooth(method = "lm")
+score_model <- lm(perc_blockwithsuite*100 ~ size, data = suitemate_size_relationship)
+# Data shows that people in smaller freshmen dorms tend to be closer and more likely to block together. 60% of respondents from Mass Hall block with their freshmen year suitemates. The average treatment effect of having one more person at a freshman dorm is that it decreases the percentage of people blocking with their suitemates by 0.1
+```
+
+
+```{r draft for simulation, echo = FALSE}
+# This part will allow user to "experiment" with blocking group sizes. I'm thinking about something like selecting a hypothetical blocking group size and a hypothetical linking group size, and then our output would be a pie chart showing the chances of being assigned to the four communities
+added_communities <-
+  official_housing %>%
+  mutate(community = 
+           case_when(
+house == "Lowell" | house == "Quincy" | house == "Adams" ~ "river_central",
+house == "Leverett" | house == "Dunster" | house == "Mather" ~ "river_east",
+house == "Eliot" | house == "Winthrop" | house == "Kirkland" ~ "river_west",
+house == "Pforzheimer" | house == "Cabot" | house == "Currier" ~ "quad"))
+# add linking group size column
+people_with_links <- added_communities %>%
+   filter(!is.na(linking))
+find_linking_size <- function(linkname){
+      size1 <- official_housing%>%
+        filter(full_name == linkname) %>%
+        select(group_size) %>%
+        pull()
+      size1
+    }
+added_link_size <- people_with_links%>%
+  mutate(link_size = map(linking, ~find_linking_size(.)))
+likelihood <- function(your_size, link_size1){
+  total<- added_link_size %>%group_by(group_leader) %>%
+                 slice(1)%>%
+                 filter(group_size == your_size, link_size == link_size1)
+   total_number <- total %>% nrow()
+  river_east_number <- total %>% filter(community == "river_east") %>%nrow()
+  prop_river_east <- river_east_number/total_number
+  
+  river_west_number <- total %>% filter(community == "river_west") %>%nrow()
+  prop_river_west <- river_west_number/total_number
+  
+  river_central_number <- total %>% filter(community == "river_central") %>%nrow()
+  prop_river_central <- river_central_number/total_number
+  quad_number <- total %>% filter(community == "quad") %>%nrow()
+  prop_quad <- quad_number/total_number  
+  
+  # print the tibble
+  tibble(river_east_likelihood=prop_river_east,
+         river_central_likelihood=prop_river_east,
+         river_west_likelihood = prop_river_west,
+         quad_likelihood = prop_quad)
+}
+  total<- added_link_size %>%group_by(group_leader) %>%
+                 slice(1)%>%
+                 filter(group_size == 8, link_size == 2)
+likelihood(5,5)
+
+
+```
+
+
+```{r sleuthing}
+
+vars <- official_housing %>% 
+  arrange(group_name) %>%
+  group_by(group_name, house) %>%
+  summarize(how_many_varsity = sum(varsity)) %>%
+  group_by(house) %>%
+  summarize(average_varsity = mean(how_many_varsity))
+
+vars$house <- as.factor(vars$house)
+
+saveRDS(object = vars, file = "shiny_app/varsity_per_block.RDS")
+
+ggplot(vars, aes(x = fct_reorder(house, (average_varsity)), y = average_varsity)) +
+  geom_col()
+
+```
+
+```
+
+
+
+```
+
+
+```{r}
+
+# only look at groups that are above a certain response rate
+
+added_response_rate <- official_housing %>%
+  filter(!is.na(group_leader)) %>%
+  group_by(group_leader) %>%
+  arrange(group_leader) %>%
+  mutate(group_size = n()) %>%
+  mutate(response_rate = length(which(!is.na(gender)))/group_size) %>%
+  filter(response_rate > 0.5) %>%
+  filter(group_size > 1)
+# reuse part of the code in proportions, wrap it in a big function
+get_orientation_table <- function(data){
+ho <- which(grepl("Homosexual", data$sexual_orientation))
+he <- which(grepl("Heterosexual", data$sexual_orientation))
+nah <- which(grepl("Prefer not to say", data$sexual_orientation))
+bi <- which(grepl("Bisexual",data$sexual_orientation))
+que <- which(grepl("Queer", data$sexual_orientation))
+a <- which(grepl("Asexual", data$sexual_orientation))
+# total orientations reported
+total_orientation = c(ho, he, nah, bi, que, a)
+# orientation proportions table
+prop_ethnicity_tibble <- tibble(
+  prop_homosexual = prop(ho, total_orientation),
+  prop_heterosexual = prop(he, total_orientation),
+  prop_prefer_not_to_say = prop(nah, total_orientation),
+  prop_bi = prop(bi, total_orientation),
+  prop_asexual = prop(a, total_orientation)
+)
+prop_ethnicity_tibble
+}
+# ethnicity results for the groups we're studying
+orientation_results <- added_response_rate %>%
+  group_by(group_leader) %>%
+  nest() %>%
+  mutate(orientation_results = map(data, ~get_orientation_table(.))) %>%
+  unnest(orientation_results) 
+
+saveRDS(object = orientation_results, file = "shiny_app/orientation_results.RDS")
+
+```
+
+```
+```

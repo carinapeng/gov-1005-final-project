@@ -1,0 +1,90 @@
+---
+title: "athletics"
+author: "Jamal Nimer"
+date: "4/11/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(googlesheets4)
+library(janitor)
+library(tidyverse)
+```
+
+
+```{r}
+
+sheets_deauth()
+
+ss1 <- "https://docs.google.com/spreadsheets/d/18Nbt_VtV1YARn311z0t2z9vh5DuzAVCGLJrvRsqHuLs/edit#gid=1531565679"
+
+sheet <- read_sheet(ss= ss1) %>%
+  clean_names() %>%
+  select(-timestamp,-email_address)
+
+
+ss2 <- 'https://docs.google.com/spreadsheets/d/1C6v5OQybzVyD2dk9v5Z-mLQ0eQ90x691jDJBrpRBC5k/edit#gid=0'
+  
+athletics <- read_sheet(ss=ss2) %>% 
+  clean_names() 
+  
+
+
+ 
+
+```
+
+
+
+```{r}
+
+ athletics_tidy <- athletics %>% 
+  pivot_longer(
+    cols = 1:40,
+    names_to = "sport",
+    values_to = "name"
+  ) %>%
+  arrange(sport) %>%
+  distinct(name, sport) %>%
+  filter(!is.na(name)) %>%
+  extract(name, c("first_name", "last_name"), "([^ ]+) (.*)")
+
+```
+
+
+```{r}
+
+athletics_tidy_2 <- athletics_tidy %>% 
+  group_by(first_name, last_name) %>%
+  slice(1)
+
+```
+
+```{r}
+sheet_joined <- left_join(
+  x = sheet,
+  y = athletics_tidy_2,
+  by = c('first_name' = 'first_name', 'last_name' = 'last_name')
+) %>%
+  select(first_name, last_name, sport) %>%
+  write_excel_csv2(path = 'athletics.csv')
+
+convert("athletics.csv", "athletics.xlsx")
+
+
+# filenames <- list.files("[path_name]", pattern="*.csv", full.names=TRUE)
+# for(i in 1:length(filenames)){
+#     a <- read.csv(filenames[i])
+#     write.xls(a, paste("file",i,".xls", sep=""))
+# }
+
+sheet_joined
+
+```
+
+
+
+
+
+

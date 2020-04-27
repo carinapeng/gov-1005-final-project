@@ -1,0 +1,149 @@
+---
+title: "crimson_comparison"
+author: "Eliot Min"
+date: "4/26/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(shiny)
+library(plotly)
+library(ggthemes)
+library(tidyverse)
+library(shinythemes)
+library(skimr)
+library(patchwork)
+library(cowplot)
+library(googlesheets4)
+```
+
+```{r create tibbles}
+
+
+prop <- function(list1,list2) {
+  length(list1)/length(list2)
+}
+
+ethnicity <- function(community) {
+  w <- which(grepl("White", community$ethnicity))
+  a <- which(grepl("Asian", community$ethnicity))
+  b <- which(grepl("Black", community$ethnicity))
+  hl <- which(grepl("Hispanic/Latinx", community$ethnicity))
+  mena <- which(grepl("Middle Eastern/North African", community$ethnicity))
+  indna <- which(grepl("Indigenous/Native American", community$ethnicity))
+  eth_pref <- which(grepl("Prefer not to say", community$ethnicity))
+  total_ethnicity = c(w, a, b, hl, mena, indna, eth_pref)
+  
+  prop_ethnicity_tibble <- tibble(
+    prop_white = prop(w, total_ethnicity),
+    prop_asian = prop(a, total_ethnicity),
+    prop_black = prop(b, total_ethnicity),
+    prop_hl = prop(hl, total_ethnicity),
+    prop_mena = prop(mena, total_ethnicity),
+    prop_indna = prop(indna, total_ethnicity),
+    prop_eth_pref = prop(eth_pref, total_ethnicity)
+  )
+  
+  prop_ethnicity_tibble
+}
+
+
+sheets_deauth()
+ss1 <- 'https://docs.google.com/spreadsheets/d/1edQVynHA0j7Dnnth8qTvQtmS3ww768lyl4pyPC8XPoE/edit?usp=sharing'
+official_housing <- read_sheet(ss1)
+
+###
+crim_gender <- data.frame(
+  Type = c("Female", "Male", "Genderqueer/Non-binary", "Prefer not to say"),
+  Percentage = c(50.7, 48.6, 0.2, 0.5)
+)
+
+crim_ethnicity <- data.frame(
+  Type = c("Hispanic or Latinx", "American Indian or Alaska Native", "Asian or South Asian", "Black or African American", "Pacific Islander", "White"),
+  Percentage = c(11.1, 1.2, 28.4, 10.1, 0.8, 47.2)
+)
+
+crim_athlete <- data.frame(
+  Type = c("Recruited Athlete", "Not a recruited athlete"),
+  Percentage = c(11.2, 88.8)
+)
+
+crim_international <- data.frame(
+  Type = c("International", "Not International"),
+  Percentage = c(14.5, 85.5)
+)
+
+crim_legacy <- data.frame(
+  Type = c("No Legacy", "Legacy*"),
+  Percentage = c(73.1, 26.9)
+)
+
+crim_finaid <- data.frame(
+  Type = c("Financial Aid", "No Financial Aid"),
+  Percentage = c(58.6, 37.4)
+)
+
+###
+our_ethnicity <- ethnicity(official_housing) %>%
+  mutate(White = round((prop_white + prop_mena)*100, digits = 1),
+         Asian = round(prop_asian*100, digits = 1),
+         Black = round(prop_black*100, digits = 1),
+         "Hispanic or Latinx"= round(prop_hl*100, digits = 1),
+         "American Indigenous/Native American" = round(prop_indna*100, digits = 1),
+         "Prefer not to say" = round(prop_eth_pref*100, digits = 1),
+  ) %>%
+  select("White", "Asian", "Black", "Hispanic or Latinx", "American Indigenous/Native American", "Prefer not to say") %>%
+  t() %>%
+  tibble() %>%
+  mutate(Type = c("White", "Asian", "Black", "Hispanic or Latinx", "American Indigenous/Native American", "Prefer not to say"),
+         Percentage = map_dbl(., ~.))
+
+
+gender <- official_housing %>%
+  group_by(gender) %>%
+  count() %>%
+  data.frame() %>%
+  filter(gender != "4 Female / 4 Male") %>%
+  arrange(desc(gender))
+
+our_gender <- gender %>%
+  mutate(Type = c("FTM/Trans", "Prefer not to say", "Male", "Female" ),
+         Percentage = map_dbl(n, ~round((./sum(n))*100, digits = 1) ))
+
+
+our_finaid <- data.frame(
+  Type = c("Financial Aid", "No Financial Aid"),
+  Percentage = c(round(mean(official_housing$financial_aid, na.rm = TRUE)*100, digits = 1), 100-round(mean(official_housing$financial_aid, na.rm = TRUE)*100, digits = 1))
+)
+
+our_international <- data.frame(
+  Type = c("International", "Not International "),
+  Percentage = c(round(mean(official_housing$international, na.rm = TRUE)*100, digits = 1), 100-round(mean(official_housing$international, na.rm = TRUE)*100, digits = 1))
+)
+
+our_legacy <- data.frame(
+  Type = c("Legacy", "No Legacy"),
+  Percentage = c(round(mean(official_housing$legacy, na.rm = TRUE)*100, digits = 1), 100-round(mean(official_housing$legacy, na.rm = TRUE)*100, digits = 1))
+)
+
+our_athletes <- data.frame(
+  Type = c("Varsity  Athlete", "Not a Varsity Athlete"),
+  Percentage = c(round(mean(official_housing$varsity, na.rm = TRUE)*100, digits = 1), 100-round(mean(official_housing$varsity, na.rm = TRUE)*100, digits = 1))
+)
+
+saveRDS(object = crim_gender, file = "shiny_app/crimson_comparison/crim_gender")
+saveRDS(object = crim_ethnicity, file = "shiny_app/crimson_comparison/crim_ethnicity")
+saveRDS(object = crim_athlete, file = "shiny_app/crimson_comparison/crim_athletes")
+saveRDS(object = crim_international, file = "shiny_app/crimson_comparison/crim_international")
+saveRDS(object = crim_legacy, file = "shiny_app/crimson_comparison/crim_legacy")
+saveRDS(object = crim_finaid, file = "shiny_app/crimson_comparison/crim_finaid")
+saveRDS(object = our_gender, file = "shiny_app/crimson_comparison/our_gender")
+saveRDS(object = our_ethnicity, file = "shiny_app/crimson_comparison/our_ethnicity")
+saveRDS(object = our_athletes,file = "shiny_app/crimson_comparison/our_athletes" )
+saveRDS(object = our_legacy, file = "shiny_app/crimson_comparison/our_legacy")
+saveRDS(object = our_international, file = "shiny_app/crimson_comparison/our_international")
+saveRDS(object = our_finaid, file = "shiny_app/crimson_comparison/our_finaid")
+```

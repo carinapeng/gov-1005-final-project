@@ -1,0 +1,271 @@
+---
+title: "proportions"
+author: "Austin Li"
+date: "4/19/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(reprex)
+library(janitor)
+library(gt)
+library(shiny)
+library(infer)
+library(googlesheets4)
+```
+
+```{r setup, echo=F}
+
+# reading in sheet and pulling column
+
+sheets_deauth()
+  
+official_housing <- read_sheet(ss= "https://docs.google.com/spreadsheets/d/1edQVynHA0j7Dnnth8qTvQtmS3ww768lyl4pyPC8XPoE/edit#gid=0") %>%
+  clean_names()
+
+# creating a not in function
+
+`%notin%` <- Negate(`%in%`)
+```
+
+```{r prop function, echo=F}
+# general prop function
+
+prop <- function(list1,list2) {
+  length(list1)/length(list2)
+}
+```
+
+
+```{r ethnicity, echo=F}
+
+# ethnicity
+# selecting rows into a list
+
+w <- which(grepl("White", official_housing$ethnicity))
+
+a <- which(grepl("Asian", official_housing$ethnicity))
+
+b <- which(grepl("Black", official_housing$ethnicity))
+
+hl <- which(grepl("Hispanic/Latinx", official_housing$ethnicity))
+
+mena <- which(grepl("Middle Eastern/North African", official_housing$ethnicity))
+
+indna <- which(grepl("Indigenous/Native American", official_housing$ethnicity))
+
+eth_pref <- which(grepl("Prefer not to say", official_housing$ethnicity))
+
+# total ethnicities reported
+
+total_ethnicity = c(w, a, b, hl, mena, indna, eth_pref)
+
+# ethinicity proportions table
+
+prop_ethnicity_tibble <- tibble(
+  prop_white = prop(w, total_ethnicity),
+  prop_asian = prop(a, total_ethnicity),
+  prop_black = prop(b, total_ethnicity),
+  prop_hl = prop(hl, total_ethnicity),
+  prop_mena = prop(mena, total_ethnicity),
+  prop_indna = prop(indna, total_ethnicity),
+  prop_eth_pref = prop(eth_pref, total_ethnicity)
+)
+
+prop_ethnicity_tibble
+```
+
+```{r religion, echo=F}
+christ <- which(grepl("Christian", official_housing$religion))
+
+hindu <- which(grepl("Hindu", official_housing$religion))
+
+muslim <- which(grepl("Muslim", official_housing$religion))
+
+jewish <- which(grepl("Jewish", official_housing$religion))
+
+agnos <- which(grepl("Agnostic", official_housing$religion))
+
+athiest <- which(grepl("Athiest", official_housing$religion))
+
+relig_pref <- which(grepl("Prefer not to say", official_housing$religion))
+
+# total religions reported
+
+total_relig = c(christ, hindu, muslim, jewish, agnos, athiest, relig_pref)
+
+# religion proportions table
+
+prop_relig_table <- tibble(
+  prop_christ = prop(christ, total_relig),
+  prop_hindu = prop(hindu, total_relig),
+  prop_muslim = prop(muslim, total_relig),
+  prop_jewish = prop(jewish, total_relig),
+  prop_agnos = prop(agnos, total_relig),
+  prop_athiest = prop(athiest, total_relig),
+  prop_relig_pref = prop(relig_pref, total_relig)
+)
+
+prop_relig_table
+```
+
+```{r sex_or, echo=F}
+hetero <- which(grepl("Heterosexual", official_housing$sexual_orientation))
+
+homo <- which(grepl("Homosexual", official_housing$sexual_orientation))
+
+bi <- which(grepl("Bisexual", official_housing$sexual_orientation))
+
+as <- which(grepl("Asexual", official_housing$sexual_orientation))
+
+sex_pref <- which(grepl("Prefer not to say", official_housing$sexual_orientation))
+
+# total sexual orientations reported
+
+total_sex <- c(hetero, homo, bi, as, sex_pref)
+
+# sexual orientation proportions table
+
+prop_sex_tibble <- tibble(
+  prop_hetero = prop(hetero, total_sex),
+  prop_homo = prop(homo, total_sex),
+  prop_bi = prop(bi, total_sex),
+  prop_as = prop(as, total_sex),
+  prop_sex_pref = prop(sex_pref, total_sex)
+)
+
+prop_sex_tibble
+```
+
+```{r reason_suitemates, echo=F}
+
+# blocking with suitemates
+
+suite_yes <- which(grepl("Yes", official_housing$suitemates))
+
+suite_no <- which(grepl("No", official_housing$suitemates))
+
+# total suite
+
+total_suite <- c(suite_yes, suite_no)
+
+# blocking with suitemates proportions table
+
+prop_suite_tibble <- tibble(
+  prop_suite_yes = prop(suite_yes, total_suite),
+  prop_suite_no = prop(suite_no, total_suite)
+)
+
+# reason for blocking with suitemates
+
+sleep <- which(grepl("Similar sleeping schedules", official_housing$reason_suitemates))
+
+aca_int <- which(grepl("Common academic interests", official_housing$reason_suitemates))
+
+hobbies <- which(grepl("Common hobbies", official_housing$reason_suitemates))
+
+friends <- which(grepl("Similar friend groups", official_housing$reason_suitemates))
+
+music <- which(grepl("Same taste for music", official_housing$reason_suitemates))
+
+religion <- which(grepl("Same religion", official_housing$reason_suitemates))
+
+# total suite_reasons reported
+
+total_suite_reasons <- c(sleep, aca_int, hobbies, friends, music, religion)
+
+# blocking with suitemates reason proportions table
+
+prop_suite_reason_tibble <- tibble(
+  prop_sleep = prop(sleep, total_suite_reasons),
+  prop_aca_int = prop(aca_int, total_suite_reasons),
+  prop_hobbies = prop(hobbies, total_suite_reasons),
+  prop_friends = prop(friends, total_suite_reasons),
+  prop_music = prop(music, total_suite_reasons),
+  prop_reigion = prop(religion, total_suite_reasons)
+)
+
+prop_suite_tibble
+prop_suite_reason_tibble
+
+```
+
+```{r group_size, echo=F}
+one <- which(grepl(1, official_housing$group_size))
+
+two <- which(grepl(2, official_housing$group_size))
+
+three <- which(grepl(3, official_housing$group_size))
+
+four <- which(grepl(4, official_housing$group_size))
+
+five <- which(grepl(5, official_housing$group_size))
+
+six <- which(grepl(6, official_housing$group_size))
+
+seven <- which(grepl(7, official_housing$group_size))
+
+eight <- which(grepl(8, official_housing$group_size))
+
+# total sizes reported
+
+total_sizes <- c(one, two, three, four, five, six, seven, eight)
+
+# group size proportions table
+
+prop_group_size_tibble <- tibble(
+  prop_one = prop(one, total_sizes),
+  prop_two = prop(two, total_sizes),
+  prop_three = prop(three, total_sizes),
+  prop_four = prop(four, total_sizes),
+  prop_five = prop(five, total_sizes),
+  prop_six = prop(six, total_sizes),
+  prop_seven = prop(seven, total_sizes),
+  prop_eight = prop(eight, total_sizes)
+)
+```
+
+```{r appr, echo=F}
+app_yes <- which(grepl(1, official_housing$approval))
+
+app_no <- which(grepl(0, official_housing$approval))
+
+# total approval reported
+
+total_app = c(app_yes, app_no)
+
+# approval proportions table
+
+prop_approve <- tibble(
+  prop_app_yes = prop(app_yes, total_app),
+  prop_app_no = prop(app_no, total_app)
+)
+
+prop_approve
+```
+
+```{r total proportions, echo=F}
+
+# view all demographic statistics
+
+total_proportions = tibble(
+  ethnicity = prop_ethnicity_tibble,
+  religion= prop_relig_table,
+  sexual_orientation = prop_sex_tibble,
+  block_w_suitemates = prop_suite,
+  suitemates_reason = prop_suite_reason_tibble,
+  group_size = prop_group_size_tibble,
+  approval = prop_approve
+)
+
+total_proportions
+```
+
+
+
+
+

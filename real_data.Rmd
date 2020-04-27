@@ -1,0 +1,118 @@
+---
+title: "real_data"
+author: "Jamal Nimer, Lucy He, Austin Li"
+date: "4/13/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+library(readxl)
+library(reprex)
+library(janitor)
+library(gt)
+library(haven)
+library(shiny)
+library(infer)
+library(dplyr)
+library(googlesheets4)
+```
+
+```{r}
+# reads in from the "first_years"
+# google sheet in the project drive
+
+sheets_deauth()
+  
+ss1 <- 'https://docs.google.com/spreadsheets/d/1edQVynHA0j7Dnnth8qTvQtmS3ww768lyl4pyPC8XPoE/edit?usp=sharing'
+
+official_housing <- read_sheet(ss1) 
+
+```
+
+```{r all_communities}
+
+# creates a tibble of all communities (neighborhoods AND houses)
+# n times where n represents the number of reps in the rep_sample_n.
+# This tibble is then used to generate summary statistics for 
+# each community. It relies on the previous functions for
+# (1) assigning houses and (2) generating summary statistics.
+#
+# This tibble can be filtered down for any desired sub communities
+# as done in later r code chunks
+
+all_communities <- official_housing %>% 
+  
+  # 1) take the sheet of freshman and nest
+  nest(data=everything()) %>% 
+  
+  # 2) take each tibble of "assigned" freshmen and generate community summaries
+  
+  # neighborhoods
+  mutate(river_central = map(data, ~overview(assigned = ., community = 'river_central'))) %>% 
+  mutate(river_east = map(data, ~overview(assigned = ., community = 'river_east'))) %>% 
+  mutate(river_west = map(data, ~overview(assigned = ., community = 'river_west'))) %>% 
+  mutate(river = map(data, ~overview(assigned = ., community = 'river'))) %>% 
+  mutate(quad = map(data, ~overview(assigned = ., community = 'quad'))) %>% 
+  
+  #river_central
+  mutate(adams = map(data, ~overview(assigned = ., community = 'Adams'))) %>% 
+  mutate(lowell = map(data, ~overview(assigned = ., community = 'Lowell'))) %>% 
+  mutate(quincy = map(data, ~overview(assigned = ., community = 'Quincy'))) %>% 
+  
+  
+  # river_east
+  mutate(leverett = map(data, ~overview(assigned = ., community = 'Leverett'))) %>% 
+  mutate(dunster = map(data, ~overview(assigned = ., community = 'Dunster'))) %>% 
+  mutate(mather = map(data, ~overview(assigned = ., community = 'Mather'))) %>%  
+  
+  
+  # river_west
+  mutate(winthrop = map(data, ~overview(assigned = ., community = 'Winthrop'))) %>% 
+  mutate(kirkland = map(data, ~overview(assigned = ., community = 'Kirkland'))) %>% 
+  mutate(eliot = map(data, ~overview(assigned = ., community = 'Eliot'))) %>%   
+  
+  
+  # quad
+  mutate(currier = map(data, ~overview(assigned = ., community = 'Currier'))) %>% 
+  mutate(pforzheimer = map(data, ~overview(assigned = ., community = 'Pforzheimer'))) %>% 
+  mutate(cabot = map(data, ~overview(assigned = ., community = 'Cabot'))) 
+
+```
+
+```{r neighborhoods}
+
+# generates summary statistics for neighborhoods
+
+neighborhoods <- all_communities %>% 
+  select(river_central, river_east, river_west, quad) 
+
+river_central <- all_communities %>% 
+  select(river_central) %>% 
+  unnest(river_central)
+
+river_east <- all_communities %>% 
+  select(river_east) %>% 
+  unnest(river_east)
+
+river_west <- all_communities %>% 
+  select(river_west) %>% 
+  unnest(river_west)
+
+river <- all_communities %>% 
+  select(river) %>% 
+  unnest(river)
+
+quad <- all_communities %>% 
+  select(quad) %>% 
+  unnest(quad)
+```
+
+
+```{r saveRDS}
+# saveRDS(object = assigned_all, file = "shiny_app/updated_fake_data.RDS")
+```
+
+
